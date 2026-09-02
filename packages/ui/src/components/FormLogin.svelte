@@ -7,7 +7,7 @@
   import Inbox from "@lucide/svelte/icons/inbox";
   import { defaults } from "sveltekit-superforms/client";
   import { zod } from "sveltekit-superforms/adapters";
-  import { signIn } from "@repo/library/better-auth";
+  import { signIn } from "@callepuzzle/auth/client";
 
   import FormFields from "./FormFields.svelte";
   import { zodToFieldsJsonSchema } from "../schemas/utils.js";

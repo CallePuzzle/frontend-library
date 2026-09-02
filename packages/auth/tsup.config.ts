@@ -4,12 +4,11 @@ export default defineConfig((options) => {
   const isWatch = options.watch;
 
   return {
-    entry: ["src/index.ts", "src/better-auth/index.ts"],
+    entry: ["src/client.ts", "src/server.ts", "src/hooks.ts", "src/sender.ts"],
     format: ["esm"],
     dts: isWatch
       ? false
       : {
-          resolve: true,
           compilerOptions: {
             skipLibCheck: true,
             declaration: true,

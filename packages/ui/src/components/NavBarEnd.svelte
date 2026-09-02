@@ -3,11 +3,11 @@
   import BellRing from "@lucide/svelte/icons/bell-ring";
   import Globe from "@lucide/svelte/icons/globe";
   import Link from "./Link.svelte";
-  import type { Routes } from "@repo/library";
+  import type { Routes } from "@callepuzzle/core";
   import Modal from "./Modal.svelte";
   import ModalType from "./Modal.svelte";
   import FormLogin from "./FormLogin.svelte";
-  import type { AuthClient, Session } from "@repo/library/better-auth";
+  import type { AuthClient, Session } from "@callepuzzle/auth/client";
   import type { Props as FormLoginProps } from "./FormLogin.svelte";
   import { type Locale } from "../utils.js";
 

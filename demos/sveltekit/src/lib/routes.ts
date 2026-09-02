@@ -1,5 +1,5 @@
 import { m } from "./paraglide/messages.js";
-import { routes as coreRoutes, type Routes } from "@repo/library";
+import { routes as coreRoutes, type Routes } from "@callepuzzle/core";
 
 const myRoutes: Routes = {
   admin_index: {

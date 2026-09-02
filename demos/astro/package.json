@@ -1,5 +1,5 @@
 {
-  "name": "astro",
+  "name": "astro-demo",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -10,5 +10,6 @@
   },
   "dependencies": {
     "astro": "^5.12.0"
-  }
+  },
+  "private": true
 }

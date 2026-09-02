@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Route } from "@repo/library";
+  import type { Route } from "@callepuzzle/core";
   export type Props = {
     route: Route;
   };

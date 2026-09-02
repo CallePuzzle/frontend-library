@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Routes, Route } from "@repo/library";
+  import type { Routes, Route } from "@callepuzzle/core";
 
   import Link from "./Link.svelte";
 

@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  packages:
+    name: build + check-publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+
+      - run: bun install --frozen-lockfile
+
+      # Compila los paquetes publicables y valida el empaquetado con publint + attw.
+      # El scope se limita a @callepuzzle/*: los demos y los paquetes que elimina el plan 02
+      # no deben poder tumbar el CI de la librería.
+      - run: bunx turbo run check-publish --filter='@callepuzzle/*'

@@ -1,4 +1,4 @@
 @import "tailwindcss";
-@source "../../../packages/sveltekit-ui";
+@source "../../../packages/ui";
 @import "@repo/tailwind-config";
 @plugin "daisyui";

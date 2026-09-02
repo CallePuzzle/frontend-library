@@ -1,7 +1,7 @@
 <script module>
   import { defineMeta } from "@storybook/addon-svelte-csf";
   import Header from "../components/Header.svelte";
-  import { routes } from "@repo/library";
+  import { routes } from "@callepuzzle/core";
 
   // More on how to set up stories at: https://storybook.js.org/docs/writing-stories
   const { Story } = defineMeta({

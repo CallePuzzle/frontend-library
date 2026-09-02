@@ -2,9 +2,9 @@
   import "../app.css";
   import { page } from "$app/state";
   import { locales, localizeHref, setLocale } from "$lib/paraglide/runtime";
-  import { Header } from "@repo/sveltekit-ui";
+  import { Header } from "@callepuzzle/svelte-ui";
   import { routes } from "$lib/routes.js";
-  import { session, authClient } from "@repo/library/better-auth";
+  import { session, authClient } from "@callepuzzle/auth/client";
 
   import type { PageData } from "./$types";
   import type { Snippet } from "svelte";

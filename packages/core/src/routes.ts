@@ -1,5 +1,4 @@
 import { m } from "./paraglide/messages.js";
-import type { AuthClient } from "./better-auth/client.js";
 
 type URL<T extends string = string> =
   | T
@@ -42,7 +41,7 @@ const routes: Routes = {
   },
 };
 
-function GetMenuRoutes(routes: Routes, authClient: AuthClient): Route[] {
+function GetMenuRoutes(routes: Routes): Route[] {
   return Object.values(routes).filter((route) => route.showInMenu);
 }
 

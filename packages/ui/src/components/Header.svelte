@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import type { Routes } from "@repo/library";
+  import type { Routes } from "@callepuzzle/core";
 
   import Menu from "@lucide/svelte/icons/menu";
   import NavBarList from "./NavBarList.svelte";
