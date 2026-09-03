@@ -1,4 +1,15 @@
-@import "tailwindcss";
-@source "../../../packages/ui";
-@import "@repo/tailwind-config";
-@plugin "daisyui";
+/*
+ * Estilos del demo: exactamente lo que escribiría un consumidor externo.
+ *
+ * La hoja publicada de la librería (`@callepuzzle/svelte-ui/styles.css`) ya trae
+ * `@import "tailwindcss"`, `@plugin "daisyui"` y su propio `@source` apuntando al paquete
+ * (Tailwind 4 no escanea `node_modules`), así que aquí no hay que repetir ninguno de los tres:
+ * duplicarlos generaría dos veces todo el CSS base.
+ *
+ * Lo único que falta añadir es el `@source` de los ficheros de la app, porque la detección
+ * automática de Tailwind parte del directorio de la hoja que hace el `@import "tailwindcss"`
+ * — que aquí vive dentro de `node_modules` — y no llega hasta `src/`.
+ */
+@import '@callepuzzle/svelte-ui/styles.css';
+
+@source './';

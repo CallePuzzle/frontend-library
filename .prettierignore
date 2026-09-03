@@ -1,0 +1,30 @@
+# Gestores de paquetes
+bun.lock
+bun.lockb
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Dependencias
+node_modules
+
+# Salidas de build
+dist
+build
+.svelte-kit
+storybook-static
+.turbo
+coverage
+
+# Código generado por Paraglide en el demo (lo reescribe `paraglide-js compile`)
+demos/sveltekit/src/lib/paraglide
+
+# Migraciones generadas por Prisma
+demos/sveltekit/prisma/migrations
+
+# CHANGELOG generado por Changesets
+**/CHANGELOG.md
+
+# El parser de markdown de prettier escapa los asteriscos de los comentarios `{/* */}` de
+# MDX y rompe el fichero.
+**/*.mdx

@@ -1,30 +1,32 @@
 <script lang="ts">
-  import type { Routes, Route } from "@callepuzzle/core";
+	import type { HTMLAttributes } from 'svelte/elements';
+	import { getMenuRoutes, type RouteMap } from '@callepuzzle/core';
+	import Link from './Link.svelte';
+	import { cn } from '../utils.js';
 
-  import Link from "./Link.svelte";
+	export type Props = {
+		/** Mapa de rutas de la app. La clave es la ruta; el valor, su configuración de menú. */
+		routes: RouteMap;
+		/** `horizontal` para la navbar de escritorio; `drawer` para el panel lateral. */
+		type?: 'horizontal' | 'drawer';
+		class?: string;
+	} & Omit<HTMLAttributes<HTMLUListElement>, 'class'>;
 
-  export type Props = {
-    type: "horizontal" | "drawer";
-    routes: Routes;
-  };
+	let { routes, type = 'horizontal', class: className, ...rest }: Props = $props();
 
-  let { type, routes }: Props = $props();
+	// `$derived`, no un `const` de módulo: el menú tiene que reaccionar si `routes` cambia
+	// (p. ej. al cambiar de idioma, que reescribe todas las `label`).
+	const menuRoutes = $derived(getMenuRoutes(routes));
 
-  function getClass() {
-    if (type === "horizontal") {
-      return "menu menu-horizontal";
-    } else if (type === "drawer") {
-      return "menu bg-base-200 min-h-full w-80 p-4";
-    }
-  }
-
-  const routesArray: Route[] = Object.values(routes).filter(
-    (route: Route) => route.showInMenu === true,
-  );
+	const typeClass = $derived(
+		type === 'drawer' ? 'menu min-h-full w-80 bg-base-200 p-4 py-10' : 'menu menu-horizontal'
+	);
 </script>
 
-<ul class={getClass()}>
-  {#each routesArray as route (route.url)}
-    <li><Link {route} /></li>
-  {/each}
+<ul class={cn(typeClass, className)} {...rest}>
+	{#each menuRoutes as route (route.id)}
+		<li>
+			<Link {route} href={route.id} />
+		</li>
+	{/each}
 </ul>

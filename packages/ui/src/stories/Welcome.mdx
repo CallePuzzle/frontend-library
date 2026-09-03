@@ -1,0 +1,212 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Bienvenida" />
+
+# @callepuzzle/svelte-ui
+
+Componentes **Svelte 5** para las apps SvelteKit de CallePuzzle: navbar, cajón lateral, dock
+móvil, modal, pie, campos de formulario derivados de un schema de zod y los dos flujos de login
+de better-auth.
+
+Tres cosas que conviene saber antes de mirar cualquier componente:
+
+- **El estilo es daisyUI 5 sobre Tailwind 4.** No hay una línea de CSS propio en la librería.
+- **Los textos entran por props**, con defaults en inglés. La librería no compila i18n.
+- **La sesión entra por props**, como dato plano. La librería no tiene stores.
+
+Este Storybook es la referencia de componentes: cada uno tiene sus stories con `autodocs`, y la
+tabla de props sale de los tipos y de sus comentarios.
+
+---
+
+## Instalación
+
+Los paquetes se publican en **GitHub Packages**, que exige autenticación incluso para paquetes
+públicos. En el repo consumidor, un `.npmrc`:
+
+```
+@callepuzzle:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NPM_TOKEN}
+```
+
+con `NPM_TOKEN` = un PAT con scope `read:packages` (nunca commiteado). Después:
+
+```sh
+bun add @callepuzzle/core @callepuzzle/auth @callepuzzle/svelte-ui
+bun add -D tailwindcss @tailwindcss/vite daisyui
+bun add @lucide/svelte better-auth sveltekit-superforms formsnap zod
+bun add bits-ui   # solo si vas a usar @callepuzzle/svelte-ui/otp
+```
+
+Y en tu CSS, **una línea**:
+
+```css
+/* src/app.css */
+@import '@callepuzzle/svelte-ui/styles.css';
+```
+
+La hoja publicada trae `@import "tailwindcss"`, `@plugin "daisyui"` y —lo importante— el
+`@source` que hace que Tailwind escanee el paquete instalado, porque **Tailwind 4 no mira dentro
+de `node_modules`**. Si te olvidas de importarla no hay ningún error: los componentes salen sin
+estilo. Es el fallo de integración más frecuente.
+
+No escribas `@import "tailwindcss"` ni `@plugin "daisyui"` por tu cuenta, ni un `@source` a
+`node_modules/@callepuzzle/svelte-ui`: ya están dentro del paquete.
+
+El paso a paso completo (better-auth, `hooks.server.ts`, `app.d.ts`, el `RouteMap`) está en
+`docs/instalacion.md` del repositorio.
+
+---
+
+## Theming
+
+El theming es el de daisyUI, declarado en el CSS de tu app. Un tema propio:
+
+```css
+@import '@callepuzzle/svelte-ui/styles.css';
+
+@plugin "daisyui/theme" {
+	name: 'mimarca';
+	default: true;
+	--color-primary: oklch(55% 0.2 250);
+	--color-base-100: oklch(98% 0 0);
+}
+```
+
+O uno de los que trae daisyUI:
+
+```css
+@import '@callepuzzle/svelte-ui/styles.css';
+@plugin "daisyui" {
+	themes: dark --default;
+}
+```
+
+Los componentes usan **solo nombres semánticos** (`base-100`, `base-200`, `base-300`, `primary`,
+`accent`, `neutral`, `info`, `success`, `warning`, `error`), nunca colores literales, así que un
+cambio de tema en la app arrastra a la librería sin tocarla.
+
+Para un ajuste puntual, la prop `class` de cualquier componente. La clase se compone con `cn()`
+(`clsx` + `tailwind-merge`), así que la sobreescritura es **predecible**: un `class="btn-primary"`
+gana a un `btn-accent` por defecto en vez de depender del orden de la hoja.
+
+```svelte
+<Header class="bg-base-100 shadow-none">…</Header>
+```
+
+`cn()` se exporta desde el barrel, por si te sirve en tu propio código.
+
+---
+
+## Convenciones de props
+
+Las mismas en todos los componentes, para que no haya que consultar la ficha de cada uno:
+
+- **`class?: string`** en todo componente con raíz DOM, y el resto de atributos HTML se reenvían
+  al elemento raíz (`...rest`). Lo que el componente gobierna se excluye del tipo con `Omit`.
+- **El contenido va por `Snippet`**, no por `<slot>` (Svelte 5). Cuando un snippet necesita datos
+  del componente, los recibe como parámetro: `Drawer` da `{ drawerId }` a su `children`,
+  `Modal` da `{ showModal }` a su `trigger`, `NavBarEnd` da el usuario a `avatar`.
+- **Los datos van por props, nunca por import.** Ningún componente importa `routes`, `session`,
+  `authClient`, `m` ni un schema concreto: todo entra desde fuera.
+- **El cliente de auth se tipa estructuralmente** (`SignOutClient`, `MagicLinkClient`,
+  `EmailOtpClient`): el paquete no importa `@callepuzzle/auth` ni para tipos, así que vale
+  cualquier cliente de better-auth con los plugins que sea —y también un doble en un test.
+- **El usuario es un dato plano**, `SessionUser = { id, name?, email?, image? }`, que llega del
+  `load` del servidor. No hay stores de sesión: en SSR un store de módulo sería compartido por
+  todos los usuarios que atienda el proceso.
+- **Los `id` del DOM se generan con `$props.id()`**, nunca fijos: dos instancias en la misma
+  página no se pisan.
+- **La librería no navega ni invalida por su cuenta.** Los formularios de login avisan por
+  `onSuccess` y ahí decides tú (`invalidateAll()`, `goto()`, cerrar el modal).
+
+Dos consecuencias de diseño que sorprenden al principio:
+
+- **`Header` es solo la navbar**: no envuelve la app y no trae cajón lateral. El cajón es un
+  `Drawer` aparte, opcional, y le pasas su `drawerId` al `Header` como `menuToggleFor`.
+- **`NavBarEnd` no embute el login**: cuando no hay `user`, renderiza el snippet `login`. El
+  flujo (magic link u OTP) y el cierre del modal son tuyos.
+
+### El `RouteMap`
+
+La navegación se declara una vez y la pintan `Header`, `NavBarList` y `Dock`. **La clave del mapa
+es la ruta**:
+
+```ts
+import type { RouteId } from '$app/types';
+import type { RouteMap } from '@callepuzzle/core';
+import House from '@lucide/svelte/icons/house';
+
+export function getRoutes(): RouteMap<RouteId> {
+	return {
+		'/': { label: 'Inicio', short: 'Home', icon: House, showInMenu: true, showInMobile: true },
+		'/admin': { label: 'Administración', showInMenu: true }
+	};
+}
+```
+
+`showInMenu` gobierna el menú de escritorio y `showInMobile` el dock móvil, y son
+**independientes**: una ruta que deba salir en los dos sitios declara los dos flags. No hay `url`
+(la clave es la ruta) ni `isProtected` (la protección va en tus `+layout.server.ts`).
+
+---
+
+## Inyección de textos
+
+Cada componente con texto visible trae sus textos **en inglés** y acepta `strings`:
+
+```svelte
+<Modal title="Editar" strings={{ close: 'Cerrar' }}>…</Modal>
+```
+
+- La prop es `strings?: Partial<XStrings>`: sobreescribes **solo las claves que quieras**.
+- Dentro, el componente hace `const t = $derived({ ...defaultXStrings, ...strings })`. Es
+  reactivo: si cambias de idioma en caliente, el texto se repinta.
+- Los tipos `XStrings` y los valores `defaultXStrings` se exportan desde el barrel. El tipo hace
+  de checklist: cuando la librería añade una clave, tu `tsc` te enseña que hay copy nuevo que
+  decidir.
+- Lo que necesita interpolación es una **función**: `avatarAlt: (name: string) => string`.
+- Los textos repetidos están en `commonStrings` (`close`, `back`, `menu`, `signIn`, `signOut`,
+  `required`, `optional`, …): tradúcelos una vez y repártelos.
+
+```ts
+import { commonStrings, type NavBarEndStrings } from '@callepuzzle/svelte-ui';
+import { m } from '$lib/paraglide/messages';
+
+// Función, no `const`: un mensaje resuelto en scope de módulo congela el idioma para todo el
+// proceso Node. Es la regla dura de la librería.
+export function getNavBarEndStrings(): NavBarEndStrings {
+	return {
+		search: m.common_search(),
+		notifications: m.common_notifications(),
+		language: m.common_language(),
+		userMenu: m.nav_user_menu(),
+		profile: m.common_profile(),
+		signOut: m.common_sign_out(),
+		avatarAlt: (name) => m.common_avatar_alt({ name })
+	};
+}
+```
+
+Los idiomas también son datos: `NavBarEnd` acepta `locales?: readonly string[]` y
+`setLocale?: (locale: string) => void`, los de **tu** runtime de i18n. No hay ningún tipo
+`Locale` en la librería, para que tu unión de locales encaje sin castings. El selector solo se
+pinta con dos o más locales y con `setLocale` definido.
+
+Y los schemas siguen la misma regla: `createLoginSchema(strings?)` es una factoría, no un `const`
+con los mensajes ya compilados.
+
+El catálogo completo de diccionarios, clave a clave, está en `docs/i18n.md`.
+
+---
+
+## Más
+
+En el repositorio:
+
+- `docs/instalacion.md` — integración paso a paso desde un proyecto vacío.
+- `docs/i18n.md` — inyección de textos, con el ejemplo de Paraglide.
+- `docs/auth.md` — better-auth de principio a fin.
+- `docs/migracion.md` — mapeo símbolo a símbolo desde las versiones antiguas.
+- `docs/adr/` — las decisiones de arquitectura y sus alternativas descartadas.
+- `AGENTS.md` — convenciones y trampas conocidas.

@@ -1,18 +1,9 @@
 import '@testing-library/jest-dom/vitest';
-import { vi } from 'vitest';
 
-// required for svelte5 + jsdom as jsdom does not support matchMedia
-Object.defineProperty(window, 'matchMedia', {
-	writable: true,
-	enumerable: true,
-	value: vi.fn().mockImplementation((query) => ({
-		matches: false,
-		media: query,
-		onchange: null,
-		addEventListener: vi.fn(),
-		removeEventListener: vi.fn(),
-		dispatchEvent: vi.fn()
-	}))
-});
-
-// add more mocks here if you need them
+/**
+ * Setup del proyecto `component`.
+ *
+ * Los tests corren en un **navegador real** (vitest browser mode + playwright), no en jsdom:
+ * aquí no hace falta ningún mock de `matchMedia` ni de APIs del DOM. Lo único que se añade son
+ * los matchers de `jest-dom`, para los asertos que no van por `expect.element()`.
+ */

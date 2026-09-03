@@ -1,1 +1,1 @@
-export { routes, type Routes, type Route } from "./routes.js";
+export { getMenuRoutes, type Route, type RouteConfig, type RouteMap } from './routes.js';

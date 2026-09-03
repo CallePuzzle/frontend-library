@@ -19,6 +19,7 @@ Hoy hay dos paquetes con código real y la frontera entre ellos es arbitraria:
 ### H3.1 — El nombre `library` no dice nada y mezcla capas
 
 `packages/library` junta tres cosas sin relación:
+
 - **Rutas y tipos de navegación** (`src/routes.ts`) — puro dato, sin dependencias.
 - **Autenticación** (`src/better-auth/*`) — depende de `better-auth` y `@sveltejs/kit`.
 - **Envío de email** (`src/better-auth/sender.ts`) — depende de `nodemailer`, es **código de
@@ -47,6 +48,7 @@ no a un paquete de `node_modules`.
   "./package.json": "./package.json"
 }
 ```
+
 Solo hay condición `"svelte"`. No hay `"import"` ni `"default"`. Cualquier herramienta que no
 conozca la condición `svelte` (Vitest en entorno node, un script de build, `tsx`, un bundler mal
 configurado) **no resuelve el paquete**. La convención de `svelte-package` es exportar ambas:
@@ -60,11 +62,12 @@ Sin `sideEffects: false` (o la lista de CSS), los bundlers no pueden tree-shakea
 ### H3.5 — Dependencias mal clasificadas
 
 `packages/sveltekit-ui/package.json`:
+
 - **`zod-to-json-schema` NO está declarado** pero `src/schemas/utils.ts` lo importa (y también
   `src/tests/zodToJsonSchema.test.ts`). Funciona solo por hoisting de bun en el monorepo;
   instalado desde npm, **rompe**. Ver [09](09-forms-schemas.md).
 - `better-auth` y `nodemailer` están en `dependencies` de `sveltekit-ui` pero el paquete solo usa
-  *tipos* de better-auth (vía `@repo/library/better-auth`) y **no usa nodemailer en absoluto**.
+  _tipos_ de better-auth (vía `@repo/library/better-auth`) y **no usa nodemailer en absoluto**.
 - `svelte` está bien como `peerDependency` — pero `sveltekit-superforms`, `formsnap`, `zod` y
   `@lucide/svelte` están como `dependencies`. Al menos `zod` y `sveltekit-superforms` deberían
   ser **peer** (el consumidor tiene su propia instancia; dos copias de zod = validadores que no
@@ -72,6 +75,7 @@ Sin `sideEffects: false` (o la lista de CSS), los bundlers no pueden tree-shakea
 - `@sveltejs/kit` es `devDependency` pero los tipos públicos lo necesitan → peer.
 
 `packages/library/package.json`:
+
 - `@inlang/paraglide-js` aparece **duplicado**, en `dependencies` (`^2.2.0`) y en
   `devDependencies` (`2.2.0`).
 - `nodemailer` en `dependencies` para código muerto (H3.1).
@@ -83,9 +87,12 @@ Existe el mismo fichero en `packages/library/src/app.d.ts`,
 
 ```ts
 declare global {
-  namespace App {
-    interface Locals { session?: Session; user?: User; }
-  }
+	namespace App {
+		interface Locals {
+			session?: Session;
+			user?: User;
+		}
+	}
 }
 ```
 
@@ -139,49 +146,49 @@ packages/
 
 ```json
 {
-  "sideEffects": ["**/*.css"],
-  "files": ["dist", "!dist/**/*.test.*", "!dist/**/*.spec.*"],
-  "svelte": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "svelte": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./styles.css": "./dist/styles/index.css",
-    "./package.json": "./package.json"
-  }
+	"sideEffects": ["**/*.css"],
+	"files": ["dist", "!dist/**/*.test.*", "!dist/**/*.spec.*"],
+	"svelte": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js",
+			"default": "./dist/index.js"
+		},
+		"./styles.css": "./dist/styles/index.css",
+		"./package.json": "./package.json"
+	}
 }
 ```
 
 ## Tareas
 
-- [ ] **T3.1** Crear `packages/core` con `routes.ts` (sin i18n, ver [04](04-i18n.md)) y
-  `schema/` (el `zodToFieldsJsonSchema`, ver [09](09-forms-schemas.md)). Sin dependencias de
-  runtime.
-- [ ] **T3.2** Crear `packages/auth` a partir de `packages/library/src/better-auth/`, con tres
-  entrypoints (`/client`, `/server`, `/hooks`) y sin barrel que los mezcle.
-- [ ] **T3.3** Borrar `packages/library` una vez vaciado. Borrar `sender.ts` (código muerto) o
-  moverlo a `auth/server` **y exportarlo**, si se decide que la librería debe ofrecer envío de
-  email — decisión a tomar en [05](05-auth.md).
-- [ ] **T3.4** Renombrar `packages/sveltekit-ui` → `packages/ui` y ajustar `exports` según la
-  plantilla de arriba.
-- [ ] **T3.5** Reclasificar dependencias en los tres paquetes: mover a `peerDependencies` svelte,
-  `@sveltejs/kit`, `zod`, `sveltekit-superforms`, `formsnap`, `better-auth`; añadir los mismos a
-  `devDependencies` para poder compilar/testear; declarar `peerDependenciesMeta.optional` donde
-  aplique.
-- [ ] **T3.6** Declarar `zod-to-json-schema` o eliminarlo migrando a `z.toJSONSchema` de zod v4
-  (ver [09](09-forms-schemas.md)). **Bug real hoy.**
-- [ ] **T3.7** Eliminar la duplicación de `@inlang/paraglide-js` en `packages/library`.
-- [ ] **T3.8** Borrar `app.d.ts` de los dos paquetes de librería. Dejarlo **solo** en
-  `demos/sveltekit`, con los tipos importados de verdad
-  (`type Session = typeof auth.$Infer.Session`, como hace `donde-esta-tu-local`).
-- [ ] **T3.9** Simplificar `svelte.config.js` de `ui`: quitar `adapter-auto` y la dependencia;
-  dejar solo `preprocess: vitePreprocess()`. Quitar el script `preview`.
-- [ ] **T3.10** Añadir `sideEffects` y `files` a todos los paquetes publicables.
-- [ ] **T3.11** Validar con `publint` + `attw` y con un consumo real desde el demo instalado por
-  tarball (`npm pack` → `bun add ./paquete.tgz`), no por `workspace:*`.
+- [x] **T3.1** Crear `packages/core` con `routes.ts` (sin i18n, ver [04](04-i18n.md)) y
+      `schema/` (el `zodToFieldsJsonSchema`, ver [09](09-forms-schemas.md)). Sin dependencias de
+      runtime.
+- [x] **T3.2** Crear `packages/auth` a partir de `packages/library/src/better-auth/`, con tres
+      entrypoints (`/client`, `/server`, `/hooks`) y sin barrel que los mezcle.
+- [x] **T3.3** Borrar `packages/library` una vez vaciado. Borrar `sender.ts` (código muerto) o
+      moverlo a `auth/server` **y exportarlo**, si se decide que la librería debe ofrecer envío de
+      email — decisión a tomar en [05](05-auth.md).
+- [x] **T3.4** Renombrar `packages/sveltekit-ui` → `packages/ui` y ajustar `exports` según la
+      plantilla de arriba.
+- [x] **T3.5** Reclasificar dependencias en los tres paquetes: mover a `peerDependencies` svelte,
+      `@sveltejs/kit`, `zod`, `sveltekit-superforms`, `formsnap`, `better-auth`; añadir los mismos a
+      `devDependencies` para poder compilar/testear; declarar `peerDependenciesMeta.optional` donde
+      aplique.
+- [x] **T3.6** Declarar `zod-to-json-schema` o eliminarlo migrando a `z.toJSONSchema` de zod v4
+      (ver [09](09-forms-schemas.md)). **Bug real hoy.**
+- [x] **T3.7** Eliminar la duplicación de `@inlang/paraglide-js` en `packages/library`.
+- [x] **T3.8** Borrar `app.d.ts` de los dos paquetes de librería. Dejarlo **solo** en
+      `demos/sveltekit`, con los tipos importados de verdad
+      (`type Session = typeof auth.$Infer.Session`, como hace `donde-esta-tu-local`).
+- [x] **T3.9** Simplificar `svelte.config.js` de `ui`: quitar `adapter-auto` y la dependencia;
+      dejar solo `preprocess: vitePreprocess()`. Quitar el script `preview`.
+- [x] **T3.10** Añadir `sideEffects` y `files` a todos los paquetes publicables.
+- [x] **T3.11** Validar con `publint` + `attw` y con un consumo real desde el demo instalado por
+      tarball (`npm pack` → `bun add ./paquete.tgz`), no por `workspace:*`.
 
 ## Criterios de aceptación
 
@@ -190,3 +197,45 @@ packages/
 - Importar solo `@callepuzzle/core` no arrastra `better-auth` ni `nodemailer` al `node_modules`
   del consumidor.
 - `attw` no reporta condiciones de `exports` faltantes.
+
+## Estado (2026-09-02)
+
+Implementado. El mapa objetivo del documento es el que hay en disco:
+
+```
+packages/core/   @callepuzzle/core       "." (rutas, cero deps de runtime) + "./schema" (zod)
+packages/auth/   @callepuzzle/auth       "./client" + "./server" + "./hooks"
+packages/ui/     @callepuzzle/svelte-ui  "." + "./otp" + "./styles.css"
+```
+
+`publint` da _All good_ y `attw --profile esm-only` sale todo 🟢 en los tres paquetes.
+`svelte-check` da 0 errores en `packages/ui` y en el demo.
+
+**Decisiones tomadas al implementar, no previstas en el plan:**
+
+- **`core` se parte en dos entrypoints, no en uno.** El plan proponía un `core` único, pero
+  `zodToFieldsJsonSchema` necesita zod en runtime y `getMenuRoutes` no necesita nada. Con `.` y
+  `./schema` separados, `zod` es peer **opcional** y quien solo quiere el modelo de rutas no
+  arrastra zod. `svelte` también es peer opcional de `core`: solo se usa el tipo `Component`
+  para `RouteConfig.icon`.
+- **`ui` no importa `@callepuzzle/auth` ni para tipos.** El plan decía «`ui` puede importar
+  `core`, nunca `auth/server`»; se ha ido más lejos: los componentes tipan el cliente de auth de
+  forma **estructural** (`SignOutClient`, `MagicLinkClient`, `EmailOtpClient` en
+  `packages/ui/src/types.ts`), así que un consumidor puede usarlos con su propio cliente de
+  better-auth y los plugins que quiera, y `@callepuzzle/auth` desaparece de las dependencias de
+  `ui`.
+- **`FormLoginOtp` va en el subpath `./otp`.** Necesita `bits-ui` (el `PinInput`), que queda como
+  peer **opcional**: si estuviera en el barrel principal, un consumidor de magic link no podría
+  importar nada del paquete sin instalar `bits-ui`.
+- **`esm-env` como dependencia de `ui`.** El aviso de tipo no soportado de `FormFields` usaba las
+  variables de entorno de Vite, y `svelte-package` lo rechaza en código publicado (solo funcionan
+  en apps bundleadas con Vite). Se usa el flag `DEV` de `esm-env`, que es lo que hace SvelteKit
+  por el mismo motivo.
+- **`clsx` + `tailwind-merge` como dependencias de `ui`**, para el `cn()` que hace falta en cuanto
+  los componentes aceptan `class` (ver [08](08-estilos-theming.md), T8.7).
+
+**T3.11** verificado desde fuera: proyecto SvelteKit limpio, `node_modules` propio y los tres
+paquetes instalados por tarball, con `svelte-check` y `vite build` en verde e importando toda la
+superficie pública. El detalle está en la reverificación de
+[01](01-estrategia-distribucion.md). Lo único que queda para la `0.1.0` real es que CI corte la
+release al mergear a `main`.

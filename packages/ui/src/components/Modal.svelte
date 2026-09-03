@@ -1,55 +1,100 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { onMount } from 'svelte';
-	import { m } from '../paraglide/messages.js';
+	import type { HTMLDialogAttributes } from 'svelte/elements';
+	import { defaultModalStrings, type ModalStrings } from './Modal.strings.js';
+	import { cn } from '../utils.js';
 
 	export type Props = {
-		type?: 'button' | 'X' | 'outside';
-		title: string;
+		/**
+		 * Etiqueta del botón que abre el diálogo. Sólo se usa con el disparador por defecto:
+		 * con `trigger` o con `showButton={false}` no hace falta.
+		 */
+		title?: string;
 		children: Snippet;
-	};
+		/**
+		 * Cómo se cierra: `button` añade un botón al pie, `X` una cruz en la esquina y
+		 * `outside` (por defecto) cierra al pulsar fuera de la caja.
+		 */
+		type?: 'button' | 'X' | 'outside';
+		/** Renderizar el botón disparador por defecto. */
+		showButton?: boolean;
+		buttonClass?: string;
+		buttonCloseClass?: string;
+		boxClass?: string;
+		/**
+		 * Disparador propio, con control total del marcado. Recibe `showModal` para abrir el
+		 * diálogo. Si se pasa, sustituye al botón por defecto.
+		 */
+		trigger?: Snippet<[{ showModal: () => void }]>;
+		class?: string;
+		strings?: Partial<ModalStrings>;
+	} & Omit<HTMLDialogAttributes, 'class' | 'children'>;
 
-	let { type = 'outside', title, children }: Props = $props();
-	let modal: HTMLDialogElement;
+	let {
+		title = '',
+		children,
+		type = 'outside',
+		showButton = true,
+		buttonClass = 'btn',
+		buttonCloseClass = 'btn',
+		boxClass = 'modal-box',
+		trigger,
+		class: className,
+		strings,
+		...rest
+	}: Props = $props();
+
+	const t = $derived({ ...defaultModalStrings, ...strings });
+
+	// `bind:this` + `$state`, no una búsqueda del `<dialog>` por id en `onMount`: así la
+	// referencia es reactiva y `showModal()` nunca puede lanzar (el `?.` cubre el SSR y el
+	// primer tick, cuando todavía no hay elemento).
+	let modal: HTMLDialogElement | undefined = $state();
 
 	const uid = $props.id();
 
-	function showModal() {
-		modal.showModal();
+	/** Abre el diálogo. Exportado para poder abrirlo desde fuera del componente. */
+	export function showModal() {
+		modal?.showModal();
 	}
 
-	onMount(() => {
-		modal = document.getElementById('modal-' + uid) as HTMLDialogElement;
-	});
-
+	/** Cierra el diálogo. */
 	export function close() {
-		modal.close();
+		modal?.close();
 	}
 </script>
 
-<button class="btn" onclick={showModal}>{title}</button>
-<dialog id="modal-{uid}" class="modal">
-	<div class="modal-box">
-		{#if type == 'X'}
+{#if trigger}
+	{@render trigger({ showModal })}
+{:else if showButton}
+	<!-- `type="button"`: sin él, dentro de un `<form>` esto enviaría el formulario. -->
+	<button type="button" class={buttonClass} onclick={showModal}>{title}</button>
+{/if}
+<dialog bind:this={modal} id="modal-{uid}" class={cn('modal', className)} {...rest}>
+	<div class={boxClass}>
+		{#if type === 'X'}
 			<form method="dialog">
-				<button class="btn btn-sm btn-circle btn-ghost absolute top-2 right-2">✕</button>
+				<button class="btn absolute top-2 right-2 btn-circle btn-ghost btn-sm">
+					<span aria-hidden="true">✕</span>
+					<span class="sr-only">{t.close}</span>
+				</button>
 			</form>
 		{/if}
 
 		{@render children()}
 
-		{#if type == 'button'}
+		{#if type === 'button'}
 			<div class="modal-action">
 				<form method="dialog">
-					<!-- if there is a button in form, it will close the modal -->
-					<button class="btn">{m.common_close()}</button>
+					<!-- Un botón dentro de un `<form method="dialog">` cierra el diálogo. -->
+					<button class={buttonCloseClass}>{t.close}</button>
 				</form>
 			</div>
 		{/if}
 	</div>
-	{#if type == 'outside'}
+	{#if type === 'outside'}
 		<form method="dialog" class="modal-backdrop">
-			<button>{m.common_close()}</button>
+			<button>{t.close}</button>
 		</form>
 	{/if}
 </dialog>

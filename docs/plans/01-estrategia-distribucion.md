@@ -27,12 +27,12 @@ existe en este repo** (se renombró en el commit `c91a06c`/`66fa22a`). Su
 
 `@repo/*` es el scope de plantilla de `create-turbo`. Hay que elegir uno real. Propuesta:
 
-| Paquete actual | Nombre propuesto |
-|---|---|
-| `@repo/library` (parte routes/tipos) | `@callepuzzle/core` |
-| `@repo/library` (parte better-auth) | `@callepuzzle/auth` |
-| `@repo/sveltekit-ui` | `@callepuzzle/svelte-ui` |
-| `@repo/typescript-config` | `@callepuzzle/typescript-config` (privado) |
+| Paquete actual                       | Nombre propuesto                           |
+| ------------------------------------ | ------------------------------------------ |
+| `@repo/library` (parte routes/tipos) | `@callepuzzle/core`                        |
+| `@repo/library` (parte better-auth)  | `@callepuzzle/auth`                        |
+| `@repo/sveltekit-ui`                 | `@callepuzzle/svelte-ui`                   |
+| `@repo/typescript-config`            | `@callepuzzle/typescript-config` (privado) |
 
 Ver [03 — Arquitectura de paquetes](03-arquitectura-paquetes.md) para el porqué del corte
 `library` → `core` + `auth`.
@@ -76,33 +76,33 @@ Mientras la API se estabiliza, publicar en `0.x` y aceptar breaking changes en m
 ## Tareas
 
 - [x] **T1.1** Decidir scope público (D1) y registro (D2). Anotar la decisión como ADR en
-  `docs/adr/0001-distribucion.md`.
+      `docs/adr/0001-distribucion.md`.
 - [x] **T1.2** Renombrar los paquetes publicables. Actualizar todos los imports internos
-  (`packages/sveltekit-ui/src/components/*.svelte` importan `@repo/library` y
-  `@repo/library/better-auth`; `demos/sveltekit/src/**` también).
+      (`packages/sveltekit-ui/src/components/*.svelte` importan `@repo/library` y
+      `@repo/library/better-auth`; `demos/sveltekit/src/**` también).
 - [x] **T1.3** Añadir a cada paquete publicable: `version`, `license`, `repository`,
-  `publishConfig` (registry + `"access"`), `files`, `sideEffects`.
+      `publishConfig` (registry + `"access"`), `files`, `sideEffects`.
   - `packages/library` hoy **no tiene `files`** → publicaría `src/`, `project.inlang/`,
     `messages/` y `tsup.config.ts`.
   - `packages/sveltekit-ui` sí tiene `files: ["dist", …]` — mantener.
 - [x] **T1.4** Quitar `"private": true` de los paquetes que deben publicarse y **dejarlo** en los
-  internos (`typescript-config`).
+      internos (`typescript-config`).
 - [x] **T1.5** Instalar y configurar Changesets: `.changeset/config.json` con `"access"`,
-  `"baseBranch": "main"`, y `"ignore"` para demos y paquetes internos.
+      `"baseBranch": "main"`, y `"ignore"` para demos y paquetes internos.
 - [x] **T1.6** `.npmrc` del repo con el registry del scope; token por variable de entorno, nunca
-  commiteado. Documentar en el README cómo autenticarse.
+      commiteado. Documentar en el README cómo autenticarse.
 - [x] **T1.7** Añadir `publint` y `@arethetypeswrong/cli` como check de `prepack`/CI en cada
-  paquete publicable. `sveltekit-ui` ya invoca `publint` en `prepack` — extenderlo al resto y
-  hacerlo fallar el build (hoy no está en ninguna task de `turbo.json`).
+      paquete publicable. `sveltekit-ui` ya invoca `publint` en `prepack` — extenderlo al resto y
+      hacerlo fallar el build (hoy no está en ninguna task de `turbo.json`).
 - [x] **T1.8** Workflow de CI de publicación (GitHub Actions / GitLab CI): en `main`,
-  `changeset version` → commit → `changeset publish`.
-- [~] **T1.9** Validado **desde fuera** con tarballs (`npm pack` de los tres paquetes →
-  proyecto SvelteKit vacío): `vite build` y `svelte-check` en verde importando `Header`,
-  `FormLogin`, `Modal`, `routes`/`Routes` y `@callepuzzle/auth/hooks` + `/server`.
-  Ese test descubrió y arregló dos roturas reales del paquete publicado: `zod-to-json-schema`
-  y `@sveltejs/package` sin declarar, y `dist/paraglide/**` excluido del tarball por el
-  `.gitignore` que Paraglide deja en `src/paraglide/` y que `svelte-package` copia a `dist/`.
-  **Pendiente:** la `0.1.0` real la corta CI al mergear a `main` (ver más abajo).
+      `changeset version` → commit → `changeset publish`.
+- [x] **T1.9** Validado **desde fuera** con tarballs (`npm pack` de los tres paquetes →
+      proyecto SvelteKit vacío): `vite build` y `svelte-check` en verde importando `Header`,
+      `FormLogin`, `Modal`, `routes`/`Routes` y `@callepuzzle/auth/hooks` + `/server`.
+      Ese test descubrió y arregló dos roturas reales del paquete publicado: `zod-to-json-schema`
+      y `@sveltejs/package` sin declarar, y `dist/paraglide/**` excluido del tarball por el
+      `.gitignore` que Paraglide deja en `src/paraglide/` y que `svelte-package` copia a `dist/`.
+      **Pendiente:** la `0.1.0` real la corta CI al mergear a `main` (ver más abajo).
 
 ## Criterios de aceptación
 
@@ -134,6 +134,39 @@ Implementado en la rama `monorepo`. El changeset inicial
   (adelanta T3.2 de [03](03-arquitectura-paquetes.md); la API interna —singleton de
   `useSession()`, `as any`— sigue intacta para [05](05-auth.md)).
 - Las dependencias internas usan rangos semver (`^0.0.0`), **no** `workspace:*`: `changeset
-  publish` invoca `npm publish`, que publicaría `workspace:*` literal y rompería la instalación.
+publish` invoca `npm publish`, que publicaría `workspace:*` literal y rompería la instalación.
 - attw corre con `--profile esm-only`; en `svelte-ui` además ignora `internal-resolution-error`
   (los `.d.ts` de `svelte-package` importan `./X.svelte`, que TS solo resuelve con su plugin).
+
+### Reverificación (2026-09-02)
+
+Repetida la prueba desde fuera tras el refactor completo, con un proyecto SvelteKit limpio y
+`node_modules` propio (sin hoisting del monorepo) e instalando los tres paquetes desde tarballs
+de `npm pack`: `svelte-kit sync`, `svelte-check` (2015 ficheros, **0 errores**) y `vite build`
+en verde, ejercitando toda la superficie pública —los 19 componentes, los dos flujos de login,
+`getMenuRoutes`, `zodToFieldsJsonSchema`, `betterAuthHandle`, `getBetterAuth` y los presets, la
+factoría del cliente, `cn` y los tipos `*Strings`—. Además:
+
+- **Los estilos salen de verdad**: el CSS del build pesa 100 448 bytes y contiene las clases de
+  daisyUI de la librería (`navbar`, `btn` ×33, `modal` ×16, `fieldset`, `drawer`, `dock`…).
+  Control negativo: borrando el `@source "../"` de la hoja instalada, el CSS baja a 46 481 bytes
+  y `navbar` desaparece. Es lo que cierra T8.9 de [08](08-estilos-theming.md).
+- **`core` a solas no arrastra nada**: `bun add` de su tarball instala **un** paquete, sin rastro
+  de `better-auth` ni `nodemailer`, y su `dist` solo importa `zod/v4`.
+- **El peer opcional funciona como se diseñó**: sin `bits-ui`, importar `./otp` falla en
+  `vite build` con dos `MISSING_EXPORT` claros y **el resto del paquete sigue usable**.
+
+**Una arista que conviene tener presente:** las dependencias internas usan rangos semver
+(`"@callepuzzle/core": "^0.0.0"`) porque `changeset publish` invoca `npm publish`, que
+publicaría `workspace:*` literal. Mientras los paquetes estén en `0.0.0` y sin publicar, ese
+rango no resuelve desde un tarball —hay que sortearlo con `overrides`— porque la versión no
+existe en ningún registro. **Se arregla solo al cortar la release**: `changeset version` reescribe
+los rangos internos junto con las versiones (`updateInternalDependencies: "patch"`), así que la
+`0.1.0` publicada llevará `^0.1.0`. No es un defecto que arreglar, es un estado transitorio de
+la rama; queda anotado para que nadie lo confunda con un bug de empaquetado.
+
+La prueba también encontró **cuatro errores reales en `docs/instalacion.md`** (un
+`vite.config.ts` de ejemplo que destruía la configuración de la plantilla de `sv create`, un
+ejemplo de `Drawer` que no compilaba por sombreado del snippet `children`, un `invalidateAll()`
+sin importar y una instrucción que sobreescribía el `.npmrc` que ya genera `sv create`), todos
+corregidos en el documento.

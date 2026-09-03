@@ -19,12 +19,12 @@ ya no existe.
 Scope **`@callepuzzle`**. `packages/library` se parte en dos según su frontera real
 (dato puro vs. autenticación) y `sveltekit-ui` pasa a `ui`:
 
-| Antes | Ahora | Publicable |
-|---|---|---|
-| `@repo/library` (`src/routes.ts`) | `@callepuzzle/core` (`packages/core`) | sí |
-| `@repo/library` (`src/better-auth/*`) | `@callepuzzle/auth` (`packages/auth`) | sí |
-| `@repo/sveltekit-ui` | `@callepuzzle/svelte-ui` (`packages/ui`) | sí |
-| `@repo/typescript-config` | `@callepuzzle/typescript-config` | no (`private`) |
+| Antes                                 | Ahora                                    | Publicable     |
+| ------------------------------------- | ---------------------------------------- | -------------- |
+| `@repo/library` (`src/routes.ts`)     | `@callepuzzle/core` (`packages/core`)    | sí             |
+| `@repo/library` (`src/better-auth/*`) | `@callepuzzle/auth` (`packages/auth`)    | sí             |
+| `@repo/sveltekit-ui`                  | `@callepuzzle/svelte-ui` (`packages/ui`) | sí             |
+| `@repo/typescript-config`             | `@callepuzzle/typescript-config`         | no (`private`) |
 
 `@callepuzzle/auth` no tiene entrypoint raíz: expone `./client`, `./server`, `./hooks` y
 `./sender` para no arrastrar código de servidor al bundle de cliente (era el hallazgo H3.2 del

@@ -16,12 +16,14 @@ clases que encuentra escaneando ficheros, y por defecto **no escanea `node_modul
 ### H8.1 — El `@source` del demo no es replicable fuera del monorepo
 
 `demos/sveltekit/src/app.css`:
+
 ```css
-@import "tailwindcss";
+@import 'tailwindcss';
 @source "../../../packages/sveltekit-ui";
-@import "@repo/tailwind-config";
+@import '@repo/tailwind-config';
 @plugin "daisyui";
 ```
+
 `../../../packages/sveltekit-ui` es una ruta relativa **dentro del monorepo**. Un consumidor
 externo necesita `@source "../node_modules/@callepuzzle/svelte-ui/dist";` — que es lo que
 `y-tu-que-compras` intuyó (`@source "../node_modules/storybook-svelte";`), pero con el nombre
@@ -85,9 +87,11 @@ conflictos: `cn('btn btn-accent', props.class)` con `clsx` + `tailwind-merge`. S
 ### H8.7 — Storybook importa el CSS por ruta relativa fuera del paquete
 
 `packages/sveltekit-ui/.storybook/preview.ts`:
+
 ```ts
-import "../../tailwind-config/shared-styles.css";
+import '../../tailwind-config/shared-styles.css';
 ```
+
 Sale del paquete por `..`. Se rompe al absorber `tailwind-config` (ver
 [02](02-alcance-monorepo.md), T2.6). Debe importar el CSS propio del paquete.
 
@@ -99,8 +103,9 @@ el directorio del proyecto — otro comportamiento accidental.
 ### H8.8 — `postcss.config.js` de `tailwind-config` es inservible
 
 ```js
-export const postcssConfig = { plugins: { "@tailwindcss/postcss": {} } };
+export const postcssConfig = { plugins: { '@tailwindcss/postcss': {} } };
 ```
+
 Export **nombrado**; PostCSS espera `export default`. Y el paquete lo expone como
 `"./postcss": "./postcss.config.js"`. Nadie lo importa. Con Tailwind 4 + `@tailwindcss/vite`
 no hace falta PostCSS en absoluto.
@@ -133,24 +138,55 @@ entrada, pero anotarlo.
 
 ## Tareas
 
-- [ ] **T8.1** ADR `docs/adr/0004-daisyui-como-contrato.md`.
-- [ ] **T8.2** Mover `shared-styles.css` a `packages/ui/src/styles/index.css`; borrar
-  `packages/tailwind-config` y su `postcss.config.js` inservible.
-- [ ] **T8.3** Añadir `"./styles.css"` a `exports` y `"sideEffects": ["**/*.css"]`.
-- [ ] **T8.4** Mover `tailwindcss` y `daisyui` a `peerDependencies` (manteniéndolas en dev).
-- [ ] **T8.5** Arreglar `demos/sveltekit/src/app.css`: un solo `@import "tailwindcss"`, un solo
-  `@plugin "daisyui"`, y el `@source` apuntando a `node_modules` para que el demo **demuestre
-  la integración real** de un consumidor externo.
-- [ ] **T8.6** Arreglar `.storybook/preview.ts` para importar el CSS del propio paquete, con un
-  `@source './../src'` explícito.
-- [ ] **T8.7** Añadir `cn()` y usarlo en todos los componentes junto con la prop `class`
-  (depende de [07](07-componentes-api.md), T7.9).
-- [ ] **T8.8** Documentar en el README la sección "Instalación de estilos" con el bloque exacto.
-- [ ] **T8.9** Test de integración: un proyecto SvelteKit mínimo fuera del monorepo que instale
-  el tarball y verifique que el `Header` sale con estilos (puede ser un snapshot de Playwright).
+- [x] **T8.1** ADR `docs/adr/0004-daisyui-como-contrato.md`.
+- [x] **T8.2** Mover `shared-styles.css` a `packages/ui/src/styles/index.css`; borrar
+      `packages/tailwind-config` y su `postcss.config.js` inservible.
+- [x] **T8.3** Añadir `"./styles.css"` a `exports` y `"sideEffects": ["**/*.css"]`.
+- [x] **T8.4** Mover `tailwindcss` y `daisyui` a `peerDependencies` (manteniéndolas en dev).
+- [x] **T8.5** Arreglar `demos/sveltekit/src/app.css`: un solo `@import "tailwindcss"`, un solo
+      `@plugin "daisyui"`, y el `@source` apuntando a `node_modules` para que el demo **demuestre
+      la integración real** de un consumidor externo.
+- [x] **T8.6** Arreglar `.storybook/preview.ts` para importar el CSS del propio paquete, con un
+      `@source './../src'` explícito.
+- [x] **T8.7** Añadir `cn()` y usarlo en todos los componentes junto con la prop `class`
+      (depende de [07](07-componentes-api.md), T7.9).
+- [x] **T8.8** Documentar en el README la sección "Instalación de estilos" con el bloque exacto.
+- [x] **T8.9** Test de integración: un proyecto SvelteKit mínimo fuera del monorepo que instale
+      el tarball y verifique que el `Header` sale con estilos (puede ser un snapshot de Playwright).
 
 ## Criterios de aceptación
 
 - Un consumidor nuevo, siguiendo solo el README, obtiene los componentes con estilo a la primera.
 - El demo usa la misma configuración que un consumidor externo (nada de rutas `../../../packages`).
 - `class="..."` en cualquier componente sobreescribe de forma predecible.
+
+## Estado (2026-09-02)
+
+Implementado con la **opción A**: daisyUI 5 sobre Tailwind 4 es el contrato, declarado en
+`docs/adr/0004-daisyui-como-contrato.md`.
+
+- `tailwind-config` ya se absorbió en `packages/ui/src/styles/index.css` (fase 0, ver
+  [02](02-alcance-monorepo.md)), con su `postcss.config.js` inservible borrado.
+- La hoja se publica como `@callepuzzle/svelte-ui/styles.css`, con `sideEffects: ["**/*.css"]`.
+- `tailwindcss` y `daisyui` son `peerDependencies`.
+- `cn()` (clsx + tailwind-merge) vive en `packages/ui/src/utils.ts`, se exporta desde el barrel y
+  lo usan los 19 componentes junto con la prop `class`.
+- El `app.css` del demo es ya **exactamente** lo que pegaría un consumidor externo: sin rutas
+  `../../../packages/…`.
+- El README lleva la sección de instalación de estilos.
+
+**Decisión clave, tomada en la fase 0 y confirmada aquí:** el `@source` vive **en la hoja de la
+librería** (`@source "../"`, relativo a `dist/styles/`), no en el `app.css` del consumidor. Eso
+elimina el fallo de integración más probable que describe H8.1: el consumidor no necesita saber
+dónde está instalada la librería ni acertar con la ruta a `dist`.
+
+`.storybook/preview.ts` importa la hoja del propio paquete (T8.6), así que lo que se ve en
+Storybook es lo que ve el consumidor.
+
+**T8.9 verificado, y con control negativo.** En un proyecto externo instalado por tarball, el CSS
+del build pesa 100 448 bytes y contiene las clases de daisyUI de la librería (`navbar`, `btn`
+×33, `modal` ×16, `fieldset`, `drawer`, `dock`…). Borrando el `@source "../"` de la hoja
+instalada, el CSS baja a 46 481 bytes y `navbar` desaparece: queda demostrado que es **el
+`@source` del paquete** lo que las genera, y no un efecto colateral del escaneo del proyecto
+consumidor. Se hizo por `grep` en vez de con un snapshot de Playwright (el plan lo dejaba
+abierto): es la misma garantía con mucha menos maquinaria.

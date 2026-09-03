@@ -26,9 +26,11 @@ para el locale (`docs/adr/0001-i18n-custom-package.md`, punto 4), y aquí el dat
 de usuario.
 
 El demo lo consume así (`demos/sveltekit/src/routes/+layout.svelte`):
+
 ```ts
-import { session, authClient } from "@repo/library/better-auth";
+import { session, authClient } from '@repo/library/better-auth';
 ```
+
 y lo pasa a `<Header {session} {authClient}>`.
 
 Cómo lo resolvió el consumidor maduro: `donde-esta-tu-local/src/lib/components/NavBarEnd.svelte`
@@ -40,9 +42,10 @@ servidor por request. Es la solución correcta.
 `client.ts:10`: `createAuthClient({ … }) as any`.
 
 Consecuencia en cascada:
+
 ```ts
-export type AuthClient = typeof authClient;              // = any
-export type Session = typeof authClient.$Infer.Session;  // = any
+export type AuthClient = typeof authClient; // = any
+export type Session = typeof authClient.$Infer.Session; // = any
 ```
 
 Y esos dos tipos son la superficie pública que consumen los componentes:
@@ -68,7 +71,7 @@ return betterAuth(options);
 Dos problemas:
 
 1. **Merge superficial.** Si el consumidor pasa `plugins: [emailOTP()]` en `additionalOptions`,
-   **borra los tres plugins por defecto** sin aviso. No hay forma de *añadir* un plugin.
+   **borra los tres plugins por defecto** sin aviso. No hay forma de _añadir_ un plugin.
 2. **Los defaults son opinables y equivocados para los consumidores reales.**
    `donde-esta-tu-local` usa **OTP por email**, no magic link, y no usa `organization()`.
    `y-tu-que-compras` sí usa magic link. Imponer `organization()` a todos mete tablas de
@@ -78,12 +81,13 @@ Dos problemas:
 ### H5.4 — El magic link no envía nada, solo hace `console.log` del token
 
 `server.ts:11-22`:
+
 ```ts
 sendMagicLink: async ({ email, token, url }, request) => {
-  console.log(request);
-  // await sender(email, 'sign in', 'token: ' + token + ' -- url: ' + url);
-  console.log(email, "sign in", "token: " + token + " -- url: " + url);
-}
+	console.log(request);
+	// await sender(email, 'sign in', 'token: ' + token + ' -- url: ' + url);
+	console.log(email, 'sign in', 'token: ' + token + ' -- url: ' + url);
+};
 ```
 
 Esto es un placeholder de desarrollo **en el default de una librería publicable**. Si un
@@ -103,6 +107,7 @@ Además `console.log(request)` vuelca el `Request` entero (cabeceras incluidas) 
 event.locals.session = session?.session;
 event.locals.user = session?.user;
 ```
+
 Depende de la augmentación global de `App.Locals` que la propia librería declara en su
 `app.d.ts` con tipos sin resolver (ver [03](03-arquitectura-paquetes.md), H3.6). Debería exigir
 al consumidor que declare esos campos y documentarlo, no declararlo por él.
@@ -115,10 +120,12 @@ Ya recogido en [03](03-arquitectura-paquetes.md) (H3.2): `@repo/library/better-a
 ### H5.8 — El consumidor `y-tu-que-compras` importa un símbolo inexistente
 
 `y-tu-que-compras/src/hooks.server.ts`:
+
 ```ts
 import { betterAuth } from 'storybook-svelte';
 export const handle: Handle = sequence(betterAuth(auth));
 ```
+
 Hoy se llama `betterAuthHandle`, vive en el subpath `/better-auth`, y acepta un segundo
 argumento obligatorio `building: boolean`. Roto en tres frentes. Ver
 [12](12-convergencia-consumidores.md).
@@ -132,9 +139,9 @@ argumento obligatorio `building: boolean`. Roto en tres frentes. Ver
 import { createAuthClient } from 'better-auth/svelte';
 
 export function createCallepuzzleAuthClient<P extends BetterAuthClientPlugin[]>(
-  options: { baseURL?: string; plugins?: P } = {}
+	options: { baseURL?: string; plugins?: P } = {}
 ) {
-  return createAuthClient({ ...options });
+	return createAuthClient({ ...options });
 }
 export type CallepuzzleAuthClient = ReturnType<typeof createCallepuzzleAuthClient>;
 ```
@@ -161,16 +168,19 @@ export function getBetterAuth(options: BetterAuthOptions & { plugins?: … }) {
 ```
 
 Y ofrecer los plugins como **presets exportados y opcionales**, no como default oculto:
+
 ```ts
 export const magicLinkPreset = (send: SendMagicLink) => magicLink({ sendMagicLink: send });
-export const emailOtpPreset  = (send: SendOtp) => emailOTP({ sendVerificationOTP: send });
+export const emailOtpPreset = (send: SendOtp) => emailOTP({ sendVerificationOTP: send });
 ```
+
 Sin envío por defecto: `sendMagicLink`/`sendVerificationOTP` son **argumentos obligatorios**. Así
 es imposible desplegar la versión que hace `console.log` del token.
 
 ### P5.4 — Sobre `sender.ts`
 
 Dos caminos válidos:
+
 - **Borrarlo** y que cada app use su nodemailer (lo que ya hace `donde-esta-tu-local` en
   `src/lib/server/sender.ts`, con el transporter cacheado). Menos superficie.
 - **Exportarlo** desde `@callepuzzle/auth/server` como utilidad opcional, con `nodemailer` en
@@ -180,25 +190,25 @@ Recomendación: **borrarlo**. El transporter de `donde-esta-tu-local` ya es mejo
 
 ## Tareas
 
-- [ ] **T5.1** Eliminar `export const session = useSession()` de `client.ts`. **Bug crítico.**
-- [ ] **T5.2** Eliminar el `as any` de `createAuthClient` y tipar el retorno. Si la inferencia de
-  plugins da problemas, acotarlo con genéricos, no con `any`.
-- [ ] **T5.3** Convertir el cliente en factoría (`createCallepuzzleAuthClient`) y quitar los
-  exports de módulo `authClient`, `signIn`, `signUp`, `useSession`.
-- [ ] **T5.4** Cambiar la prop `session` por `user` en `NavBarEnd` y `Header`, con el tipo real
-  de la sesión de better-auth. Ver [07](07-componentes-api.md).
-- [ ] **T5.5** Arreglar el merge de `getBetterAuth` y quitar los plugins por defecto.
-- [ ] **T5.6** Eliminar el `sendMagicLink` que hace `console.log` y hacer obligatorio el envío.
-  Quitar `console.log(request)`.
-- [ ] **T5.7** Añadir preset de **OTP por email** (`emailOTP`), que es lo que usa el consumidor
-  principal. Ver [12](12-convergencia-consumidores.md).
-- [ ] **T5.8** Separar entrypoints `/client`, `/server`, `/hooks` (ver
-  [03](03-arquitectura-paquetes.md)).
-- [ ] **T5.9** Borrar `sender.ts` y quitar `nodemailer` de las dependencias de ambos paquetes.
-- [ ] **T5.10** Documentar la augmentación de `App.Locals` que el consumidor debe escribir, y
-  quitar el `app.d.ts` de la librería.
-- [ ] **T5.11** Tests: un test que compruebe que dos "requests" simuladas no comparten sesión, y
-  otro que `getBetterAuth({ plugins: [x] })` conserva `x`.
+- [x] **T5.1** Eliminar `export const session = useSession()` de `client.ts`. **Bug crítico.**
+- [x] **T5.2** Eliminar el `as any` de `createAuthClient` y tipar el retorno. Si la inferencia de
+      plugins da problemas, acotarlo con genéricos, no con `any`.
+- [x] **T5.3** Convertir el cliente en factoría (`createCallepuzzleAuthClient`) y quitar los
+      exports de módulo `authClient`, `signIn`, `signUp`, `useSession`.
+- [x] **T5.4** Cambiar la prop `session` por `user` en `NavBarEnd` y `Header`, con el tipo real
+      de la sesión de better-auth. Ver [07](07-componentes-api.md).
+- [x] **T5.5** Arreglar el merge de `getBetterAuth` y quitar los plugins por defecto.
+- [x] **T5.6** Eliminar el `sendMagicLink` que hace `console.log` y hacer obligatorio el envío.
+      Quitar `console.log(request)`.
+- [x] **T5.7** Añadir preset de **OTP por email** (`emailOTP`), que es lo que usa el consumidor
+      principal. Ver [12](12-convergencia-consumidores.md).
+- [x] **T5.8** Separar entrypoints `/client`, `/server`, `/hooks` (ver
+      [03](03-arquitectura-paquetes.md)).
+- [x] **T5.9** Borrar `sender.ts` y quitar `nodemailer` de las dependencias de ambos paquetes.
+- [x] **T5.10** Documentar la augmentación de `App.Locals` que el consumidor debe escribir, y
+      quitar el `app.d.ts` de la librería.
+- [x] **T5.11** Tests: un test que compruebe que dos "requests" simuladas no comparten sesión, y
+      otro que `getBetterAuth({ plugins: [x] })` conserva `x`.
 
 ## Criterios de aceptación
 
@@ -206,3 +216,38 @@ Recomendación: **borrarlo**. El transporter de `donde-esta-tu-local` ya es mejo
 - No hay ningún `export const` que ejecute lógica de sesión en scope de módulo.
 - `getBetterAuth` no compila sin una función de envío de credenciales.
 - Los tipos `Session`/`AuthClient` que ve el consumidor son los reales de better-auth.
+
+## Estado (2026-09-02)
+
+Implementado. La decisión está en `docs/adr/0005-auth-por-factoria.md` y la guía de integración
+en `docs/auth.md`.
+
+Criterios de aceptación, comprobados: `grep -rn "as any" packages/auth/src` vacío;
+`grep -rn "declare global" packages/auth/src` vacío; ningún `export const` ejecuta lógica de
+sesión en scope de módulo (el módulo `./client` exporta **un solo símbolo en runtime**, la
+factoría); los presets no compilan sin función de envío; y `Session`/`AuthClient` son los tipos
+reales de better-auth (verificado con una sonda de tipos: `Session['user']['email']` es `string`
+y un campo inexistente da error de compilación).
+
+12 tests en `packages/auth/src/{client,server}.test.ts`, incluido el de aislamiento: dos
+"requests" con `customFetchImpl` distinto resuelven cada una su usuario, y escribir la sesión en
+un cliente deja el otro en `null`.
+
+**Decisiones tomadas al implementar, no previstas en el plan:**
+
+- **Los presets aceptan un segundo argumento opcional** (`expiresIn`, `rateLimit`, `otpLength`…):
+  `magicLinkPreset(send, options?)`. Es aditivo; el plan solo preveía la función de envío.
+- **Los presets devuelven el tipo del plugin** (`ReturnType<typeof magicLink>`) y no
+  `BetterAuthPlugin`, para conservar la inferencia de endpoints en el cliente.
+- **`SendMagicLink` y `SendVerificationOtp` se derivan de los tipos reales de los plugins**
+  (`Parameters<typeof magicLink>[0]['sendMagicLink']`), porque better-auth no exporta sus
+  interfaces de opciones.
+- **Los tipos públicos son genéricos con default** (`Session<O extends ClientOptions =
+ClientOptions>`), así que `import type { Session }` sigue funcionando sin argumentos, y
+  `SessionOf<typeof authClient>` da la sesión exacta de _tu_ cliente con _tus_ plugins.
+- **`sender.ts` se borra** (opción recomendada del plan): `nodemailer` desaparece y el paquete
+  queda **sin dependencias de runtime**.
+- **T5.4 se resuelve más a fondo de lo previsto**: `NavBarEnd` no solo cambia `session` por
+  `user`, sino que deja de embutir el formulario de login (llega por el snippet `login`), con lo
+  que también muere el `setTimeout(2000)` de `afterCancelCallback` (ver
+  [07](07-componentes-api.md), T7.16).

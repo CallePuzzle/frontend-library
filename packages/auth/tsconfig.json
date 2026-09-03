@@ -1,16 +1,16 @@
 {
-  "extends": "@callepuzzle/typescript-config/base.json",
-  "include": ["**/*.ts", "tsup.config.ts"],
-  "exclude": ["node_modules", "dist"],
-  "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "sourceMap": true,
-    "strict": true,
-    "outDir": "./dist"
-  }
+	"extends": "@callepuzzle/typescript-config/base.json",
+	"include": ["**/*.ts", "tsup.config.ts"],
+	"exclude": ["node_modules", "dist"],
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"outDir": "./dist"
+	}
 }

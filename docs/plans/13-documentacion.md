@@ -8,6 +8,7 @@ pega, que es justo lo que ha pasado con `donde-esta-tu-local`.
 ### H13.1 — El README del root está obsoleto y tiene erratas
 
 `README.md`:
+
 - `bun run stoybook` (typo, el script es `storybook`).
 - Documenta `react-ui` y el demo de Astro, que se eliminan ([02](02-alcance-monorepo.md)).
 - Manda ejecutar `bunx @inlang/paraglide-js compile …` a mano, cosa que ya hace el script
@@ -21,6 +22,7 @@ pega, que es justo lo que ha pasado con `donde-esta-tu-local`.
 ### H13.2 — El README de `sveltekit-ui` es un cuaderno de notas
 
 `packages/sveltekit-ui/README.md` contiene:
+
 - salida de consola pegada de un `bun link` (`Success! Registered "storybook-svelte"`) con el
   nombre de paquete antiguo;
 - comandos de `prisma migrate diff` y `turso db shell`, que no tienen nada que ver con un
@@ -43,6 +45,7 @@ sitio — y por eso ha costado tanto reconstruir la intención al revisar.
 ### H13.5 — No hay documentación de componentes
 
 `tags: ["autodocs"]` está en las stories, así que Storybook genera fichas automáticas. Pero:
+
 - no hay ningún `.mdx` de introducción, guía de instalación ni de theming;
 - el único `.mdx` del repo es `packages/react-ui/src/stories/Configure.mdx`, la plantilla de
   Storybook, en el paquete que se borra;
@@ -94,25 +97,25 @@ razón** — el apartado que más valor tiene y del que este repo no tiene nada.
 
 ## Tareas
 
-- [ ] **T13.1** Reescribir `README.md` del root según la estructura de arriba. Corregir
-  `stoybook`.
-- [ ] **T13.2** Reescribir `packages/ui/README.md`: solo qué exporta y cómo se usa. Borrar todo
-  lo de Prisma/Turso/bun link.
-- [ ] **T13.3** Escribir `AGENTS.md` (y symlink/copia `CLAUDE.md` si se usa Claude Code).
-- [ ] **T13.4** Escribir los cuatro ADRs referenciados en estos planes:
-  `0001-distribucion`, `0002-solo-svelte`, `0003-i18n-por-inyeccion`,
-  `0004-daisyui-como-contrato`.
-- [ ] **T13.5** `docs/instalacion.md` con el flujo completo verificado desde un proyecto vacío.
-- [ ] **T13.6** `docs/migracion.md` con el mapeo de símbolos para los dos consumidores (ver
-  [12](12-convergencia-consumidores.md), T12.13).
-- [ ] **T13.7** Un `.mdx` de bienvenida en Storybook (instalación, theming, convenciones de
-  props) y publicar el Storybook (Chromatic ya está como dependencia sin configurar, o páginas
-  estáticas en CI).
-- [ ] **T13.8** Limpiar el demo para que sea documentación ejecutable: home con ejemplos reales
-  de cada componente, sin código comentado, sin `"NavNar Title"`, con el truco de los enlaces
-  de idioma explicado en un comentario.
-- [ ] **T13.9** `LICENSE` y campo `license` en los `package.json` publicables.
-- [ ] **T13.10** `CHANGELOG.md` por paquete (lo genera Changesets automáticamente, ver
+- [x] **T13.1** Reescribir `README.md` del root según la estructura de arriba. Corregir
+      `stoybook`.
+- [x] **T13.2** Reescribir `packages/ui/README.md`: solo qué exporta y cómo se usa. Borrar todo
+      lo de Prisma/Turso/bun link.
+- [x] **T13.3** Escribir `AGENTS.md` (y symlink/copia `CLAUDE.md` si se usa Claude Code).
+- [x] **T13.4** Escribir los cuatro ADRs referenciados en estos planes:
+      `0001-distribucion`, `0002-solo-svelte`, `0003-i18n-por-inyeccion`,
+      `0004-daisyui-como-contrato`.
+- [x] **T13.5** `docs/instalacion.md` con el flujo completo verificado desde un proyecto vacío.
+- [x] **T13.6** `docs/migracion.md` con el mapeo de símbolos para los dos consumidores (ver
+      [12](12-convergencia-consumidores.md), T12.13).
+- [x] **T13.7** Un `.mdx` de bienvenida en Storybook (instalación, theming, convenciones de
+      props) y publicar el Storybook (Chromatic ya está como dependencia sin configurar, o páginas
+      estáticas en CI).
+- [x] **T13.8** Limpiar el demo para que sea documentación ejecutable: home con ejemplos reales
+      de cada componente, sin código comentado, sin `"NavNar Title"`, con el truco de los enlaces
+      de idioma explicado en un comentario.
+- [x] **T13.9** `LICENSE` y campo `license` en los `package.json` publicables.
+- [~] **T13.10** `CHANGELOG.md` por paquete (lo genera Changesets automáticamente, ver
   [01](01-estrategia-distribucion.md)).
 
 ## Criterios de aceptación
@@ -121,3 +124,43 @@ razón** — el apartado que más valor tiene y del que este repo no tiene nada.
 - Cada decisión estructural del repo tiene un ADR que explica el porqué y las alternativas
   descartadas.
 - El Storybook publicado es la referencia de componentes, y está enlazado desde el README.
+
+## Estado (2026-09-02)
+
+Implementado. La estructura de documentación que propone el documento existe:
+
+```
+README.md                      qué es, requisitos, matriz de compatibilidad, instalación, ejemplo
+AGENTS.md                      convenciones, trampas conocidas y decisiones conscientes
+CLAUDE.md                      apunta a AGENTS.md
+LICENSE                        MIT (CallePuzzle)
+docs/instalacion.md            paso a paso desde un proyecto vacío, verificado con tarballs
+docs/i18n.md                   inyección de textos, con el ejemplo de Paraglide del demo
+docs/auth.md                   better-auth de principio a fin
+docs/migracion.md              mapeo símbolo a símbolo para los dos consumidores
+docs/adr/0001-distribucion.md
+docs/adr/0002-solo-svelte.md
+docs/adr/0003-i18n-por-inyeccion.md
+docs/adr/0004-daisyui-como-contrato.md
+docs/adr/0005-auth-por-factoria.md
+packages/{core,auth,ui}/README.md
+packages/typescript-config/README.md
+packages/ui/src/stories/Welcome.mdx     página de bienvenida del Storybook
+```
+
+El README de la raíz se reescribió entero: ya no documenta `react-ui` ni el demo de Astro, ni
+manda compilar Paraglide a mano, ni habla de `turso dev`; sí dice —por primera vez— **cómo
+consumir la librería desde una app externa**, con el bloque exacto de `app.css` y la
+autenticación contra GitHub Packages. Corregido `bun run stoybook` (C12).
+
+**Un ADR más de los cuatro previstos:** `0005-auth-por-factoria.md`, porque la decisión de matar
+el singleton y exigir la función de envío en los presets es tan estructural como las otras y no
+tenía dónde vivir.
+
+**Decisión no prevista:** la página de bienvenida de Storybook (T13.7) es un `.mdx`, y el parser
+de markdown de prettier escapa los asteriscos de sus comentarios `{/* */}` y rompe el fichero.
+Los `.mdx` están en `.prettierignore` por eso, con el motivo escrito.
+
+**T13.10 queda parcial**: los `CHANGELOG.md` por paquete los genera Changesets, y el changeset de
+la `0.1.0` está escrito y describe la superficie real del paquete; los ficheros aparecerán cuando
+CI ejecute `changeset version` al mergear a `main`.

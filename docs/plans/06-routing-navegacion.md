@@ -14,15 +14,22 @@
 
 ```ts
 type URL<T extends string = string> = T | ((id: string, ...params: string[]) => T);
-type Route = { name: string; url: URL; isProtected: boolean; showInMenu: boolean; permissions?: Permissions };
+type Route = {
+	name: string;
+	url: URL;
+	isProtected: boolean;
+	showInMenu: boolean;
+	permissions?: Permissions;
+};
 ```
 
 Como `url` puede ser función, todos los consumos castean:
+
 - `packages/sveltekit-ui/src/components/Link.svelte`: `href={route.url as string}`
 - `packages/sveltekit-ui/src/components/NavBarEnd.svelte`: `href={routes.notifications.url as string}`
 
-Si alguien registra una ruta con `url: (id) => \`/home/${id}\`` — y `y-tu-que-compras` lo hace,
-tres veces, en `src/lib/routes.ts` — y esa ruta acaba en un menú, el `href` renderizado es el
+Si alguien registra una ruta con `url: (id) => \`/home/${id}\``— y`y-tu-que-compras`lo hace,
+tres veces, en`src/lib/routes.ts`— y esa ruta acaba en un menú, el`href` renderizado es el
 **código fuente de la función**. El cast oculta el fallo en vez de prevenirlo.
 
 ### H6.2 — `isProtected` y `permissions` no se leen en ningún sitio
@@ -33,16 +40,17 @@ consumidor a rellenarlos (`isProtected` es **obligatorio**) sin dar nada a cambi
 una protección que no existe.
 
 `donde-esta-tu-local` ya llegó a esta conclusión y lo eliminó — su `src/lib/routes.ts` lleva el
-comentario: *"La protección real vive en los +layout.server.ts (ver B20); `isProtected` no se
-llegó a leer en ningún sitio y se quita."*
+comentario: _"La protección real vive en los +layout.server.ts (ver B20); `isProtected` no se
+llegó a leer en ningún sitio y se quita."_
 
 ### H6.3 — `GetMenuRoutes` está muerto, mal nombrado y con un parámetro sin usar
 
 ```ts
 function GetMenuRoutes(routes: Routes, authClient: AuthClient): Route[] {
-  return Object.values(routes).filter((route) => route.showInMenu);
+	return Object.values(routes).filter((route) => route.showInMenu);
 }
 ```
+
 - No se exporta (`export { routes, type Routes, type Route }` no lo incluye).
 - `authClient` no se usa.
 - PascalCase para una función.
@@ -62,12 +70,13 @@ estable.
 
 `donde-esta-tu-local` lo resolvió elegantemente: la **clave es el `RouteId` de SvelteKit** y
 `getMenuRoutes` la reinyecta con `Object.entries()`:
+
 ```ts
 type Routes = Partial<Record<RouteId, RouteConfig>>;
 function getMenuRoutes(routes, isMobile = false): Route[] {
-  return Object.entries(routes)
-    .filter(([, r]) => (isMobile && r?.showInMobile) || r?.showInMenu)
-    .map(([id, r]) => ({ id: id as RouteIdWithoutParams, ...r! }));
+	return Object.entries(routes)
+		.filter(([, r]) => (isMobile && r?.showInMobile) || r?.showInMenu)
+		.map(([id, r]) => ({ id: id as RouteIdWithoutParams, ...r! }));
 }
 ```
 
@@ -124,10 +133,11 @@ export function getMenuRoutes<Id extends string>(
 ```
 
 Puntos clave:
-1. **No hay `url`**: la clave *es* la ruta. Adiós al cast y a las funciones-URL.
+
+1. **No hay `url`**: la clave _es_ la ruta. Adiós al cast y a las funciones-URL.
    Las rutas con parámetros no van al menú; se enlazan a mano con `resolve('/gang/[slug]', {…})`.
-2. **No hay `routes` por defecto** exportado por la librería. Se exporta el *tipo* y el
-   *helper*; el mapa concreto es de la app. Elimina H6.7.
+2. **No hay `routes` por defecto** exportado por la librería. Se exporta el _tipo_ y el
+   _helper_; el mapa concreto es de la app. Elimina H6.7.
 3. **`label` en vez de `name`**, y es responsabilidad del consumidor pasarlo ya traducido.
 4. `isProtected` y `permissions` **fuera**.
 5. Los componentes que necesiten una ruta concreta (perfil, notificaciones) la reciben como
@@ -137,32 +147,34 @@ Puntos clave:
 
 La librería no puede importar `$app/types` (es del proyecto del consumidor). Con `RouteMap<Id>`
 genérico, la app hace:
+
 ```ts
 import type { RouteId } from '$app/types';
 import type { RouteMap } from '@callepuzzle/core';
 export const routes: RouteMap<RouteId> = { '/': { label: m.routes_home(), … } };
 ```
+
 y obtiene el tipado fuerte de `donde-esta-tu-local` sin que la librería sepa nada de sus rutas.
 
 ## Tareas
 
-- [ ] **T6.1** Crear el modelo nuevo en `packages/core/src/routes.ts` según la propuesta.
-- [ ] **T6.2** Eliminar `url`, `isProtected`, `permissions` y el `routes` por defecto.
-- [ ] **T6.3** Exportar `getMenuRoutes` (camelCase, sin el parámetro `authClient` muerto).
-- [ ] **T6.4** `NavBarList.svelte`: usar `getMenuRoutes` en un `$derived` (hoy es un `const` no
-  reactivo) y keyear el `{#each}` por `route.id`.
-- [ ] **T6.5** `Link.svelte`: aceptar `href` tipado y usar `resolve()` de `$app/paths`. Añadir
-  soporte de `id` (lo necesita `donde-esta-tu-local` para su tour guiado).
-- [ ] **T6.6** `NavBarEnd.svelte`: sustituir `routes.notifications.url` y `routes.profile` por
-  props `notificationsHref` / `profileHref` opcionales; ocultar el bloque si no se pasan.
-- [ ] **T6.7** Añadir `icon?: Component` y `short?: string` al modelo (ambos ya usados por
-  `donde-esta-tu-local`, ninguno soportado por la librería) y renderizar el icono en
-  `NavBarList`.
-- [ ] **T6.8** Añadir `showInMobile` y el modo `mobile` de `getMenuRoutes` (para un futuro
-  componente `Dock`, que `donde-esta-tu-local` ya tiene).
-- [ ] **T6.9** Tests unitarios de `getMenuRoutes` (filtrado desktop/mobile, preservación de la
-  clave como `id`, mapa vacío).
-- [ ] **T6.10** Actualizar el demo y documentar la migración para los consumidores.
+- [x] **T6.1** Crear el modelo nuevo en `packages/core/src/routes.ts` según la propuesta.
+- [x] **T6.2** Eliminar `url`, `isProtected`, `permissions` y el `routes` por defecto.
+- [x] **T6.3** Exportar `getMenuRoutes` (camelCase, sin el parámetro `authClient` muerto).
+- [x] **T6.4** `NavBarList.svelte`: usar `getMenuRoutes` en un `$derived` (hoy es un `const` no
+      reactivo) y keyear el `{#each}` por `route.id`.
+- [x] **T6.5** `Link.svelte`: aceptar `href` tipado y usar `resolve()` de `$app/paths`. Añadir
+      soporte de `id` (lo necesita `donde-esta-tu-local` para su tour guiado).
+- [x] **T6.6** `NavBarEnd.svelte`: sustituir `routes.notifications.url` y `routes.profile` por
+      props `notificationsHref` / `profileHref` opcionales; ocultar el bloque si no se pasan.
+- [x] **T6.7** Añadir `icon?: Component` y `short?: string` al modelo (ambos ya usados por
+      `donde-esta-tu-local`, ninguno soportado por la librería) y renderizar el icono en
+      `NavBarList`.
+- [x] **T6.8** Añadir `showInMobile` y el modo `mobile` de `getMenuRoutes` (para un futuro
+      componente `Dock`, que `donde-esta-tu-local` ya tiene).
+- [x] **T6.9** Tests unitarios de `getMenuRoutes` (filtrado desktop/mobile, preservación de la
+      clave como `id`, mapa vacío).
+- [x] **T6.10** Actualizar el demo y documentar la migración para los consumidores.
 
 ## Criterios de aceptación
 
@@ -170,3 +182,29 @@ y obtiene el tipado fuerte de `donde-esta-tu-local` sin que la librería sepa na
 - `NavBarList` reacciona a un cambio de `routes` en runtime.
 - La librería no exporta ninguna URL concreta de producto.
 - Un consumidor puede tipar su `RouteMap` con su propio `RouteId` y obtener autocompletado.
+
+## Estado (2026-09-02)
+
+Implementado tal cual lo propone el documento. El modelo vive en `packages/core/src/routes.ts`:
+`RouteConfig`, `RouteMap<Id>`, `Route<Id>` y `getMenuRoutes`.
+
+Criterios de aceptación, comprobados: `grep -rn "as string" packages/ui/src/components/` vacío;
+`NavBarList` reacciona a un cambio de `routes` en runtime (`getMenuRoutes` en un `$derived`, con
+un test de componente que blinda esa regresión); la librería no exporta ninguna URL de producto;
+y el demo tipa su mapa con `RouteMap<RouteId>` de `$app/types`.
+
+7 tests de `getMenuRoutes` en `packages/core/src/routes.test.ts`.
+
+**Decisiones tomadas al implementar, no previstas en el plan:**
+
+- **`getMenuRoutes(routes, { mobile: true })` filtra en estricto por `showInMobile`**, y no hace
+  la unión con `showInMenu` como el código de `donde-esta-tu-local`. Los dos flags quedan
+  ortogonales y una ruta que deba salir en el menú **y** en el dock declara los dos. Es más
+  predecible, a cambio de que el consumidor sea explícito.
+- **`Link` acepta `href: string` y castea al tipo de `resolve()`** con un comentario que lo
+  explica: la librería no puede conocer el `RouteId` del consumidor, así que el tipado fuerte lo
+  aporta el mapa (`RouteMap<RouteId>`), no el componente.
+- **`Link` acepta además `route` y `children`**, con precedencia `children` > `route` (icono +
+  `label`) > `label`. Con solo `href` + `label` habría que repetir el icono en cada punto de uso.
+- **`icon` se renderiza en `NavBarList` y en `DockLink`**, y `DockLink` usa `route.short ??
+route.label` (T6.7/T6.8 consumidos de verdad, no solo declarados en el tipo).

@@ -1,0 +1,65 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["typescript", "unicorn", "vitest"],
+	"categories": {
+		"correctness": "error"
+	},
+	"env": {
+		"builtin": true,
+		"browser": true,
+		"node": true,
+		"shared-node-browser": true
+	},
+	"ignorePatterns": [
+		"**/node_modules",
+		"**/dist",
+		"**/build",
+		"**/.svelte-kit",
+		"**/storybook-static",
+		"**/.turbo",
+		"**/coverage",
+		"demos/sveltekit/src/lib/paraglide",
+		"**/vite.config.ts.timestamp-*"
+	],
+	"rules": {
+		"no-unused-vars": "off",
+		"typescript/no-unused-vars": [
+			"error",
+			{
+				"argsIgnorePattern": "^_",
+				"destructuredArrayIgnorePattern": "^_",
+				"caughtErrorsIgnorePattern": "^_"
+			}
+		],
+		"typescript/no-explicit-any": "error",
+		// `oxlint` la clasifica como correctness, pero exigir el parámetro de tipo en cada
+		// `vi.fn()` es estilo, no corrección.
+		"vitest/require-mock-type-parameters": "off",
+		// `src/lib/index.ts` de la plantilla de SvelteKit solo tiene un comentario, y un
+		// barrel vacío es legítimo.
+		"unicorn/no-empty-file": "off",
+		"unicorn/no-nested-ternary": "off",
+		"unicorn/number-literal-case": "off",
+		"unicorn/empty-brace-spaces": "off"
+	},
+	"overrides": [
+		{
+			// oxlint solo ve los bloques <script> de los .svelte: no sabe que la plantilla
+			// usa las variables ni entiende las runas de Svelte 5.
+			"files": ["**/*.svelte"],
+			"rules": {
+				"typescript/no-unused-vars": "off",
+				"no-inner-declarations": "off",
+				"no-self-assign": "off",
+				"no-undef": "off"
+			}
+		},
+		{
+			// Stories y tests: un `any` puntual es ruido aceptable.
+			"files": ["**/*.stories.*", "**/*.test.*", "**/*.spec.*", "**/.storybook/**"],
+			"rules": {
+				"typescript/no-explicit-any": "off"
+			}
+		}
+	]
+}

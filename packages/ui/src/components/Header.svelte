@@ -1,69 +1,92 @@
 <script lang="ts">
-  import type { Snippet } from "svelte";
-  import type { Routes } from "@callepuzzle/core";
+	import type { Snippet } from 'svelte';
+	import type { HTMLAttributes } from 'svelte/elements';
+	import type { RouteMap } from '@callepuzzle/core';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import Menu from '@lucide/svelte/icons/menu';
+	import Link from './Link.svelte';
+	import NavBarList from './NavBarList.svelte';
+	import { defaultHeaderStrings, type HeaderStrings } from './Header.strings.js';
+	import { cn } from '../utils.js';
 
-  import Menu from "@lucide/svelte/icons/menu";
-  import NavBarList from "./NavBarList.svelte";
+	export type Props = {
+		/** Marca o logotipo. Es un `Snippet`, no un `string`, para poder pasar un `<img>`. */
+		title: Snippet;
+		/** Mapa de rutas del menú central. Si se pasa `navCenter`, se ignora. */
+		routes?: RouteMap;
+		/** Ruta de inicio. Si se pasa, el título es un enlace a ella. */
+		homeHref?: string;
+		/** Mostrar el botón "atrás" en móvil. */
+		showBack?: boolean;
+		/**
+		 * `id` del `<input class="drawer-toggle">` que abre el panel lateral (el que da
+		 * `Drawer` a su snippet `children`). Sin él no se renderiza el botón hamburguesa.
+		 */
+		menuToggleFor?: string;
+		/** Zona derecha de la navbar. Aquí va el `NavBarEnd`, si se quiere. */
+		navEnd?: Snippet;
+		/** Menú central propio. Alternativa a `routes`. */
+		navCenter?: Snippet;
+		class?: string;
+		strings?: Partial<HeaderStrings>;
+		// `title` se omite del rest a propósito: el atributo HTML `title` es un `string` y aquí
+		// es un `Snippet`; sin el `Omit` el tipo resultante (`Snippet & string`) es insatisfacible.
+	} & Omit<HTMLAttributes<HTMLDivElement>, 'class' | 'title'>;
 
-  import NavBarEnd from "./NavBarEnd.svelte";
-  import { type Props as NavBarEndProps } from "./NavBarEnd.svelte";
+	let {
+		title,
+		routes,
+		homeHref,
+		showBack = false,
+		menuToggleFor,
+		navEnd,
+		navCenter,
+		class: className,
+		strings,
+		...rest
+	}: Props = $props();
 
-  export type Props = {
-    title: string;
-    routes: Routes;
-    children: Snippet;
-  } & NavBarEndProps;
-
-  let {
-    title,
-    routes,
-    children,
-    // NavBarEndProps
-    session,
-    authClient,
-    userHasNotification = false,
-    notification = false,
-    searcher = false,
-    locales = [],
-    setLocale,
-  }: Props = $props();
+	const t = $derived({ ...defaultHeaderStrings, ...strings });
 </script>
 
-<div class="drawer">
-  <input id="my-drawer-3" type="checkbox" class="drawer-toggle" />
-  <div class="drawer-content flex flex-col">
-    <!-- Navbar -->
-    <div class="navbar bg-base-300 w-full">
-      <div class="flex-none lg:hidden">
-        <label
-          for="my-drawer-3"
-          aria-label="open sidebar"
-          class="btn btn-square btn-ghost"
-        >
-          <Menu />
-        </label>
-      </div>
-      <div class="navbar-start mx-2 px-2">{title}</div>
-      <nav class="navbar-center hidden lg:block">
-        <NavBarList type="horizontal" {routes} />
-      </nav>
-      <NavBarEnd
-        {session}
-        {authClient}
-        {userHasNotification}
-        {notification}
-        {searcher}
-        {routes}
-        {locales}
-        {setLocale}
-      />
-    </div>
-    <!-- Page content here -->
-    {@render children()}
-  </div>
-  <nav class="drawer-side">
-    <label for="my-drawer-3" aria-label="close sidebar" class="drawer-overlay"
-    ></label>
-    <NavBarList type="drawer" {routes} />
-  </nav>
+{#snippet brand()}
+	{#if homeHref}
+		<Link href={homeHref}>{@render title()}</Link>
+	{:else}
+		{@render title()}
+	{/if}
+{/snippet}
+
+<!--
+	Sólo la navbar: el `Header` ya no impone el layout de la página. El panel lateral es un
+	`Drawer` aparte, opcional, que el consumidor compone como quiera.
+-->
+<div class={cn('navbar flex min-h-px justify-between bg-base-300 shadow-sm', className)} {...rest}>
+	<div class="hidden w-full lg:flex">
+		<div class="mx-2 navbar-start px-2">{@render brand()}</div>
+		{#if navCenter}
+			<div class="my-2 navbar-center hidden lg:block">{@render navCenter()}</div>
+		{:else if routes}
+			<nav aria-label={t.navLabel} class="my-2 navbar-center hidden lg:block">
+				<NavBarList type="horizontal" {routes} />
+			</nav>
+		{/if}
+	</div>
+	<div class="flex items-center lg:hidden">
+		{#if menuToggleFor}
+			<!-- daisyUI abre el drawer con un `<label for>` sobre su checkbox. -->
+			<label for={menuToggleFor} aria-label={t.openSidebar} class="btn btn-square btn-ghost">
+				<Menu />
+			</label>
+		{/if}
+		{#if showBack}
+			<button type="button" aria-label={t.back} onclick={() => history.back()}>
+				<ChevronLeft size={30} />
+			</button>
+		{/if}
+		<div class="mx-2 px-2">{@render brand()}</div>
+	</div>
+	{#if navEnd}
+		{@render navEnd()}
+	{/if}
 </div>

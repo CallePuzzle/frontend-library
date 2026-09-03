@@ -1,0 +1,12 @@
+/**
+ * Hoja de estilos de @callepuzzle/svelte-ui.
+ *
+ * La app la importa con `@import "@callepuzzle/svelte-ui/styles.css";` y no necesita
+ * declarar ni `tailwindcss` ni el plugin de daisyUI por su cuenta.
+ *
+ * El `@source` apunta al propio paquete porque Tailwind 4 no escanea `node_modules`:
+ * sin él, las clases que usan los componentes de la librería no se generan.
+ */
+@import 'tailwindcss';
+@source "../";
+@plugin "daisyui";

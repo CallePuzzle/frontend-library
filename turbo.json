@@ -1,64 +1,49 @@
 {
-  "$schema": "https://turborepo.com/schema.json",
-  "ui": "tui",
-  "tasks": {
-    "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        ".env*"
-      ],
-      "outputs": [
-        ".svelte-kit/**",
-        "dist/**"
-      ]
-    },
-    "lint": {
-      "dependsOn": [
-        "^lint"
-      ]
-    },
-    "check-types": {
-      "dependsOn": [
-        "^check-types"
-      ]
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "storybook": {
-      "cache": false,
-      "persistent": true
-    },
-    "db:migrate:dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "db:migrate:deploy": {
-      "cache": false
-    },
-    "db:push": {
-      "cache": false
-    },
-    "db:seed": {
-      "cache": false
-    },
-    "db:generate": {
-      "cache": false
-    },
-    "better-auth:generate": {
-      "cache": false
-    },
-    "check-publish": {
-      "dependsOn": [
-        "build"
-      ]
-    }
-  },
-  "globalEnv": [
-    "NPM_TOKEN"
-  ]
+	"$schema": "https://turborepo.com/schema.json",
+	"ui": "tui",
+	"globalDependencies": [".oxlintrc.json", ".prettierrc", ".prettierignore"],
+	"globalEnv": ["NPM_TOKEN"],
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", ".env*"],
+			"env": ["DATABASE_URL", "LIBSQL_URL"],
+			"outputs": [".svelte-kit/**", "build/**", "dist/**"]
+		},
+		"build-storybook": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$"],
+			"outputs": ["storybook-static/**"]
+		},
+		"lint": {
+			"inputs": ["$TURBO_DEFAULT$"]
+		},
+		"check-types": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$"]
+		},
+		"check": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$"]
+		},
+		"test": {
+			"dependsOn": ["^build"]
+		},
+		"check-publish": {
+			"dependsOn": ["build"],
+			"outputs": []
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"storybook": {
+			"cache": false,
+			"persistent": true
+		},
+		"test:coverage": {
+			"dependsOn": ["^build"],
+			"outputs": ["coverage/**"]
+		}
+	}
 }
