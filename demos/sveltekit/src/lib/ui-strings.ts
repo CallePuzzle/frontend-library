@@ -48,7 +48,7 @@ export function getUiStrings(): UiStrings {
 		},
 		drawer: {
 			closeSidebar: m.ui_close_sidebar(),
-			toggleSidebar: m.ui_open_sidebar()
+			openSidebar: m.ui_open_sidebar()
 		},
 		dock: {
 			navLabel: m.ui_bottom_nav()

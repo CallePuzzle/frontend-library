@@ -17,12 +17,18 @@ const withImage: SessionUser = {
 
 const withoutImage: SessionUser = { id: 'usr_2', name: 'Grace Hopper' };
 
+/** Primer elemento que resuelve el locator, sin lanzar si no hay ninguno. */
+function firstOf(locator: { elements(): Element[] }): Element | null {
+	return locator.elements()[0] ?? null;
+}
+
 describe('NavBarEnd', () => {
 	it('sin usuario renderiza el snippet login y ningún menú de usuario', () => {
 		const { container } = render(NavBarEnd, { user: null, login });
 
-		expect(container.querySelector('button')?.textContent).toBe('Entrar');
-		expect(container.querySelector('[aria-label="User menu"]')).toBeNull();
+		// El snippet login es el único botón: sin usuario no hay avatar ni menú.
+		const buttons = [...container.querySelectorAll('button')];
+		expect(buttons.map((button) => button.textContent?.trim())).toEqual(['Entrar']);
 	});
 
 	it('sin usuario y sin snippet login no renderiza nada dentro', () => {
@@ -32,44 +38,43 @@ describe('NavBarEnd', () => {
 	});
 
 	it('con usuario sin imagen pinta la inicial del nombre', () => {
-		const { container } = render(NavBarEnd, { user: withoutImage });
+		const { getByRole } = render(NavBarEnd, { user: withoutImage });
 
-		expect(container.querySelector('img')).toBeNull();
-		expect(container.querySelector('.avatar div div')?.textContent?.trim()).toBe('G');
-	});
-
-	it('con usuario e imagen pinta el <img> con su texto alternativo', () => {
-		const { container } = render(NavBarEnd, { user: withImage });
-		const img = container.querySelector('img');
-
-		expect(img?.getAttribute('src')).toBe(withImage.image);
-		expect(img?.getAttribute('alt')).toBe("Ada Lovelace's avatar");
+		// El nombre accesible lo pone el `aria-label`; el texto visible es la inicial.
+		expect(firstOf(getByRole('button', { name: 'User menu' }))?.textContent?.trim()).toBe('G');
 	});
 
 	it('cae al email cuando no hay nombre', () => {
-		const { container } = render(NavBarEnd, { user: { id: 'x', email: 'zoe@example.com' } });
+		const { getByRole } = render(NavBarEnd, { user: { id: 'x', email: 'zoe@example.com' } });
 
-		expect(container.querySelector('.avatar div div')?.textContent?.trim()).toBe('Z');
+		expect(firstOf(getByRole('button', { name: 'User menu' }))?.textContent?.trim()).toBe('Z');
 	});
 
-	it('el selector de idioma necesita dos idiomas y setLocale', () => {
-		const { container: sinSetLocale } = render(NavBarEnd, {
-			user: withoutImage,
-			locales: ['es', 'en']
-		});
-		expect(sinSetLocale.querySelector('[aria-label="Language"]')).toBeNull();
+	it('con usuario e imagen pinta el <img> con su texto alternativo', () => {
+		const { getByRole } = render(NavBarEnd, { user: withImage });
+
+		const img = firstOf(getByRole('img', { name: "Ada Lovelace's avatar" }));
+		expect(img?.getAttribute('src')).toBe(withImage.image);
+	});
+
+	it('el selector de idioma necesita dos idiomas y setLocale', async () => {
+		const sinSetLocale = render(NavBarEnd, { user: withoutImage, locales: ['es', 'en'] });
+		expect(sinSetLocale.getByRole('button', { name: 'Language' }).elements()).toHaveLength(0);
 
 		const chosen: string[] = [];
-		const { container } = render(NavBarEnd, {
+		const { getByRole } = render(NavBarEnd, {
 			user: withoutImage,
 			locales: ['es', 'en'],
 			setLocale: (locale: string) => chosen.push(locale)
 		});
 
-		const toggle = container.querySelector<HTMLButtonElement>('[aria-label="Language"]');
-		expect(toggle).not.toBeNull();
+		// El dropdown abre por foco (daisyUI usa `:focus-within`): click en el toggle, y el
+		// `aria-expanded` del botón tiene que reflejarlo.
+		const toggle = getByRole('button', { name: 'Language' });
+		await toggle.click();
+		expect(firstOf(toggle)?.getAttribute('aria-expanded')).toBe('true');
 
-		container.querySelectorAll<HTMLButtonElement>('.dropdown-content button')[1]?.click();
+		await getByRole('button', { name: 'en', exact: true }).click();
 		expect(chosen).toEqual(['en']);
 	});
 
@@ -80,6 +85,22 @@ describe('NavBarEnd', () => {
 			userHasNotification: true
 		});
 
+		// El badge es decorativo, sin rol accesible: única comprobación por clase de daisyUI.
 		expect(container.querySelector('.indicator-item')).not.toBeNull();
+	});
+
+	it('Sign out cierra sesión con el authClient recibido', async () => {
+		const signOuts: number[] = [];
+		const { getByRole } = render(NavBarEnd, {
+			user: withoutImage,
+			authClient: {
+				signOut: async () => {
+					signOuts.push(1);
+				}
+			}
+		});
+
+		await getByRole('button', { name: 'Sign out' }).click();
+		await expect.poll(() => signOuts.length).toBe(1);
 	});
 });

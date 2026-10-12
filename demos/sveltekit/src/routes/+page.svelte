@@ -14,48 +14,55 @@
 	const t = $derived(getUiStrings());
 
 	/**
-	 * Un schema de zod cualquiera, con los textos del campo declarados en `.meta()`. Se
-	 * construye en el `<script>` del componente (una vez por instancia, es decir en render) y
-	 * no en scope de módulo, por lo mismo que el resto: los mensajes son texto visible.
+	 * Un schema de zod cualquiera, con los textos del campo declarados en `.meta()`. Va en
+	 * `$derived` (y no en un `const` ni en scope de módulo): sus mensajes son texto visible,
+	 * así que tiene que re-derivarse al cambiar de idioma para que etiquetas, placeholders y
+	 * descripciones se re-traduzcan.
 	 *
 	 * `description` es lo que `FormFields` usa como etiqueta del campo cuando no se le pasa
 	 * `label`; `placeholder` va al input.
 	 */
-	const profileSchema = z.object({
-		name: z.string().min(2, m.app_profile_name_error()).meta({
-			description: m.app_profile_name(),
-			placeholder: m.app_profile_name_placeholder()
-		}),
-		email: z.email(m.ui_login_email_error()).meta({
-			description: m.app_profile_email(),
-			placeholder: m.ui_login_email_placeholder()
-		}),
-		age: z
-			.number()
-			.min(18, m.app_profile_age_error())
-			.max(120)
-			.meta({ description: m.app_profile_age() }),
-		role: z.enum(['admin', 'editor', 'viewer']).meta({ description: m.app_profile_role() }),
-		bio: z
-			.string()
-			.meta({
-				description: m.app_profile_bio(),
-				placeholder: m.app_profile_bio_placeholder(),
-				// Convención de la librería: `format: 'textarea'` pinta un `<textarea>`.
-				format: 'textarea'
-			})
-			.default(''),
-		newsletter: z.boolean().meta({ description: m.app_profile_newsletter() }).default(false)
-	});
+	const profileSchema = $derived(
+		z.object({
+			name: z.string().min(2, m.app_profile_name_error()).meta({
+				description: m.app_profile_name(),
+				placeholder: m.app_profile_name_placeholder()
+			}),
+			email: z.email(m.ui_login_email_error()).meta({
+				description: m.app_profile_email(),
+				placeholder: m.ui_login_email_placeholder()
+			}),
+			age: z
+				.number()
+				.min(18, m.app_profile_age_error())
+				.max(120)
+				.meta({ description: m.app_profile_age() }),
+			role: z.enum(['admin', 'editor', 'viewer']).meta({ description: m.app_profile_role() }),
+			bio: z
+				.string()
+				.meta({
+					description: m.app_profile_bio(),
+					placeholder: m.app_profile_bio_placeholder(),
+					// Convención de la librería: `format: 'textarea'` pinta un `<textarea>`.
+					format: 'textarea'
+				})
+				.default(''),
+			newsletter: z.boolean().meta({ description: m.app_profile_newsletter() }).default(false)
+		})
+	);
 
 	/** La lista de campos sale del schema en tiempo de ejecución, no se escribe a mano. */
-	const fields = zodToFieldsJsonSchema(profileSchema);
+	const fields = $derived(zodToFieldsJsonSchema(profileSchema));
 
 	let validated = $state<string | null>(null);
 
 	// `SPA: true`: este formulario no tiene action en el servidor, es solo una demostración de
 	// validación en cliente. `onUpdate` (y no `onSubmit`) porque en superforms 2.27 `onSubmit`
 	// corre antes de validar.
+	//
+	// Matiz: `superForm` captura el schema en la creación, así que los *mensajes de validación*
+	// conservan el idioma inicial; etiquetas y placeholders (lo que renderiza `FormFields`) sí
+	// re-traducen, porque `fields` es `$derived`.
 	const form = superForm(defaults(zod4(profileSchema)), {
 		SPA: true,
 		validators: zod4Client(profileSchema),

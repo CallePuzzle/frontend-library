@@ -33,10 +33,20 @@
 	// Derivado de `$props.id()`, nunca un id fijo: dos drawers en la misma página no se pisan.
 	const uid = $props.id();
 	const drawerId = `drawer-${uid}`;
+
+	// El estado del checkbox sirve para que el nombre accesible refleje la acción real:
+	// con el cajón abierto, el toggle anuncia "cerrar", no "abrir".
+	let open = $state(false);
 </script>
 
 <div class={cn('drawer', className)} {...rest}>
-	<input id={drawerId} type="checkbox" class="drawer-toggle" aria-label={t.toggleSidebar} />
+	<input
+		id={drawerId}
+		type="checkbox"
+		class="drawer-toggle"
+		bind:checked={open}
+		aria-label={open ? t.closeSidebar : t.openSidebar}
+	/>
 	<div class={cn('drawer-content flex flex-col', contentClass)}>
 		{@render children({ drawerId })}
 	</div>

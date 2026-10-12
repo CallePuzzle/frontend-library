@@ -2,6 +2,7 @@
 	import { Link, UserNotLogged } from '@callepuzzle/svelte-ui';
 	import LoginModal from '$lib/components/LoginModal.svelte';
 	import { m } from '$lib/paraglide/messages.js';
+	import { getLocale } from '$lib/paraglide/runtime.js';
 	import { getUiStrings } from '$lib/ui-strings';
 	import type { PageData } from './$types';
 
@@ -9,8 +10,10 @@
 
 	const t = $derived(getUiStrings());
 
+	// Locale explícito: sin él, SSR y navegador pueden formatear distinto y desincronizar la
+	// hidratación. El locale de Paraglide es el mismo en ambos lados (cookie).
 	const expires = $derived(
-		data.secret?.expiresAt ? new Date(data.secret.expiresAt).toLocaleString() : '—'
+		data.secret?.expiresAt ? new Date(data.secret.expiresAt).toLocaleString(getLocale()) : '—'
 	);
 </script>
 

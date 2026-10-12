@@ -52,11 +52,9 @@ test('la ruta protegida no filtra datos sin sesión', async ({ page }) => {
 	await expect(page.getByText('You need to sign in to see this content.')).toBeVisible();
 });
 
-test('completar el login de extremo a extremo', async () => {
-	test.skip(
-		true,
-		'Necesita una base de datos en marcha (`turso dev --db-file dev.db`) y el servidor en ' +
-			'modo desarrollo, porque el envío del magic link del demo es una traza por consola ' +
-			'que lanza fuera de desarrollo a propósito. Ver src/lib/server/auth.ts.'
-	);
+test.fixme('completar el login de extremo a extremo', async () => {
+	// Necesita una base de datos en marcha (`turso dev --db-file dev.db`) y el servidor en
+	// modo desarrollo, porque el envío del magic link del demo es una traza por consola
+	// que lanza fuera de desarrollo a propósito. Ver src/lib/server/auth.ts.
+	// `fixme` y no `skip`: queda marcado en el reporte y nadie lo confunde con "pasando".
 });

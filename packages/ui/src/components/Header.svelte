@@ -16,7 +16,11 @@
 		routes?: RouteMap;
 		/** Ruta de inicio. Si se pasa, el título es un enlace a ella. */
 		homeHref?: string;
-		/** Mostrar el botón "atrás" en móvil. */
+		/**
+		 * Mostrar el botón "atrás" en móvil. Es navegación iniciada por la librería
+		 * (`history.back()`), así que es opt-in; la regla general es que la navegación la
+		 * decide la app (la única otra excepción es `ButtonSignOut`, con `redirectTo`).
+		 */
 		showBack?: boolean;
 		/**
 		 * `id` del `<input class="drawer-toggle">` que abre el panel lateral (el que da
@@ -80,6 +84,7 @@
 			</label>
 		{/if}
 		{#if showBack}
+			<!-- Excepción opt-in a "la librería no navega": ver la prop `showBack`. -->
 			<button type="button" aria-label={t.back} onclick={() => history.back()}>
 				<ChevronLeft size={30} />
 			</button>

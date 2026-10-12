@@ -160,8 +160,9 @@ Componentes exportados desde `.`: `Header`, `Drawer`, `NavBarList`, `NavBarEnd`,
   ¿rompería algo que hubiese dos copias en el árbol? Entonces es peer.
 - **zod**: siempre `from 'zod/v4'`. `.meta({ placeholder, description })`, no `.describe()`.
   `z.toJSONSchema()` nativo, no `zod-to-json-schema`.
-- **Avisos de desarrollo**: `console.warn` dentro de `if (!import.meta.env.DEV) return;`, para
-  que no viajen al bundle de producción del consumidor. No hay logger en la librería.
+- **Avisos de desarrollo**: `console.warn` tras una guarda con el flag `DEV` de `esm-env`
+  (`if (!DEV) return;`), para que no viajen al bundle de producción del consumidor. No hay logger
+  en la librería.
 - **Commits**: en inglés, [Conventional Commits](https://www.conventionalcommits.org/).
   Un `bun run changeset` por PR que toque un paquete publicable.
 
@@ -220,8 +221,10 @@ Cada una tiene su ADR en [`docs/adr/`](docs/adr); aquí va el resumen ejecutable
   `sveltekit-superforms@2.27` `onSubmit` corre **antes** de la validación de cliente, así que
   con `onSubmit` se llamaba a better-auth con emails inválidos.
 - **La librería nunca llama a `invalidateAll()` ni a `goto()` por su cuenta** (salvo
-  `ButtonSignOut`, y solo con `redirectTo`, que se puede poner a `null`). Tras un login, el
-  consumidor invalida y navega en el callback `onSuccess`. La navegación de la app es de la app.
+  `ButtonSignOut`, y solo con `redirectTo`, que se puede poner a `null`, y el `history.back()`
+  del botón «atrás» de `Header`, que es opt-in con `showBack`). Tras un login, el consumidor
+  invalida y navega en el callback `onSuccess` (o en el nuevo `onSignOut` de `ButtonSignOut`).
+  La navegación de la app es de la app.
 - **Storybook usa `@storybook/svelte-vite`, no `@storybook/sveltekit`.** El paquete es una
   librería y no tiene `src/app.html`; con el framework de SvelteKit, Storybook no arranca. Los
   módulos `$app/*` que usan los componentes (`$app/paths`, `$app/state`, `$app/navigation`,
@@ -268,8 +271,9 @@ Cada una tiene su ADR en [`docs/adr/`](docs/adr); aquí va el resumen ejecutable
 - **`bun run test` necesita Chromium.** Dos de los tres proyectos de vitest corren en navegador
   real: `bunx playwright install chromium` la primera vez.
 - **`import.meta.env` en la librería**: `svelte-package` avisa de que solo funciona en apps
-  bundleadas con Vite. Se usa a propósito en `FormFields` (`import.meta.env.DEV`) para que el
-  aviso de campo no soportado no llegue a producción. No lo extiendas sin motivo.
+  bundleadas con Vite, así que no puede usarse en código publicado. Por eso `FormFields` usa el
+  flag `DEV` de `esm-env` para que el aviso de campo no soportado no llegue a producción. No lo
+  extiendas sin motivo.
 - **`monorepo-v2` y `main` tienen historias git no relacionadas.** Hasta que la rama se promueva,
   `changeset status` no puede calcular el diff contra la base y el workflow de release no se
   dispara.

@@ -62,6 +62,11 @@
 
 	const t = $derived({ ...defaultNavBarEndStrings, ...strings });
 
+	// Estado de los dropdowns, sólo para `aria-expanded`: daisyUI los muestra por CSS cuando el
+	// contenedor tiene `:focus-within`, así que "hay foco dentro" es exactamente "está abierto".
+	let localesOpen = $state(false);
+	let userMenuOpen = $state(false);
+
 	/** Nombre visible: lo que haya, sin inventarse nada. */
 	const displayName = $derived(user?.name?.trim() || user?.email?.trim() || '');
 	const initial = $derived(displayName.charAt(0).toUpperCase());
@@ -91,8 +96,18 @@
 			Un único elemento interactivo: el `<button>` exterior que envolvía este dropdown
 			generaba HTML inválido (botones anidados) y rompía la navegación por teclado.
 		-->
-		<div class="dropdown dropdown-end">
-			<button type="button" aria-label={t.language} class="btn btn-circle btn-ghost">
+		<div
+			class="dropdown dropdown-end"
+			onfocusin={() => (localesOpen = true)}
+			onfocusout={() => (localesOpen = false)}
+		>
+			<button
+				type="button"
+				aria-label={t.language}
+				aria-haspopup="menu"
+				aria-expanded={localesOpen}
+				class="btn btn-circle btn-ghost"
+			>
 				<Globe />
 			</button>
 			<ul class="dropdown-content menu z-1 mt-3 w-32 menu-sm rounded-box bg-base-100 p-2 shadow">
@@ -108,21 +123,32 @@
 	{/if}
 
 	{#if user}
-		<div class="dropdown dropdown-end">
-			<button type="button" aria-label={t.userMenu} class="btn avatar btn-circle btn-ghost">
-				<div class="w-10 overflow-hidden rounded-full">
+		<div
+			class="dropdown dropdown-end"
+			onfocusin={() => (userMenuOpen = true)}
+			onfocusout={() => (userMenuOpen = false)}
+		>
+			<button
+				type="button"
+				aria-label={t.userMenu}
+				aria-haspopup="menu"
+				aria-expanded={userMenuOpen}
+				class="btn avatar btn-circle btn-ghost"
+			>
+				<!-- `<span>` y no `<div>`: el content model de `<button>` sólo admite phrasing. -->
+				<span class="block w-10 overflow-hidden rounded-full">
 					{#if avatar}
 						{@render avatar(user)}
 					{:else if user.image}
 						<img alt={t.avatarAlt(displayName)} src={user.image} />
 					{:else}
-						<div
+						<span
 							class="flex h-full w-full items-center justify-center bg-neutral text-neutral-content"
 						>
 							{initial}
-						</div>
+						</span>
 					{/if}
-				</div>
+				</span>
 			</button>
 			<ul class="dropdown-content menu z-1 mt-3 w-52 menu-sm rounded-box bg-base-100 p-2 shadow">
 				{#if profileHref}

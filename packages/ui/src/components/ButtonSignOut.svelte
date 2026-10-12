@@ -15,6 +15,11 @@
 		authClient: SignOutClient;
 		/** Ruta a la que ir tras cerrar sesión. `'/'` por defecto; `null` para no navegar. */
 		redirectTo?: string | null;
+		/**
+		 * Se llama tras cerrar sesión y antes de navegar: es el sitio del consumidor para
+		 * invalidar datos o limpiar estado. La librería no toca los datos de la app.
+		 */
+		onSignOut?: () => void | Promise<void>;
 		/** Contenido del botón. Por defecto, el texto de `strings.signOut`. */
 		children?: Snippet;
 		class?: string;
@@ -25,6 +30,7 @@
 	let {
 		authClient,
 		redirectTo = '/',
+		onSignOut,
 		children,
 		class: className,
 		strings,
@@ -35,6 +41,7 @@
 
 	async function signOut() {
 		await authClient.signOut();
+		await onSignOut?.();
 		if (redirectTo !== null) {
 			// Mismo motivo que en `Link`: la librería no conoce el `RouteId` del consumidor.
 			await goto(resolve(redirectTo as Parameters<typeof resolve>[0]));

@@ -137,6 +137,10 @@ Implementado en la rama `monorepo`. El changeset inicial
 publish` invoca `npm publish`, que publicaría `workspace:*` literal y rompería la instalación.
 - attw corre con `--profile esm-only`; en `svelte-ui` además ignora `internal-resolution-error`
   (los `.d.ts` de `svelte-package` importan `./X.svelte`, que TS solo resuelve con su plugin).
+- El `ignore` de demos y paquetes internos que pedía T1.5 se resuelve mejor sin `ignore`:
+  changesets desaconseja meter paquetes privados ahí; basta `"privatePackages": { "version":
+false, "tag": false }`, que es lo que hay en `.changeset/config.json` (los privados nunca se
+  publican y así tampoco se versionan).
 
 ### Reverificación (2026-09-02)
 
