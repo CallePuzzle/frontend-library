@@ -16,6 +16,10 @@ storybook-static
 .turbo
 coverage
 
+# Informes generados por Playwright en el demo
+demos/sveltekit/playwright-report
+demos/sveltekit/test-results
+
 # Código generado por Paraglide en el demo (lo reescribe `paraglide-js compile`)
 demos/sveltekit/src/lib/paraglide
 
