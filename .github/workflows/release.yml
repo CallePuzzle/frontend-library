@@ -10,6 +10,10 @@ concurrency:
 
 env:
   TURBO_TELEMETRY_DISABLED: 1
+  # Sin hooks de git en el release: los `git commit`/`git push` del changesets/action no deben
+  # disparar el pre-push (que corre la suite y necesita Chromium que aquí no se instala).
+  # Lo respetan tanto el postinstall de la dependencia simple-git-hooks como el nuestro.
+  SKIP_INSTALL_SIMPLE_GIT_HOOKS: 1
 
 permissions:
   contents: write
