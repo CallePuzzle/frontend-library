@@ -273,6 +273,12 @@ Cada una tiene su ADR en [`docs/adr/`](docs/adr); aquí va el resumen ejecutable
   `commonStrings.menu`.
 - **`bun run test` necesita Chromium.** Dos de los tres proyectos de vitest corren en navegador
   real: `bunx playwright install chromium` la primera vez.
+- **`src/lib/paraglide` del demo es un directorio generado con varios escritores.** Lo escriben
+  `build` (el plugin de vite) y el `paraglide:compile` de `check-types`/`check`, y lo leen
+  svelte-check y oxlint. Dos escritores en paralelo dejan ficheros a medias y svelte-check falla
+  con «is not a module». Por eso el `turbo.json` del demo serializa `check-types`, `check` y
+  `test` tras su propio `build`, y el `webServer` de playwright no reconstruye si ya hay
+  `.svelte-kit/output`.
 - **`import.meta.env` en la librería**: `svelte-package` avisa de que solo funciona en apps
   bundleadas con Vite, así que no puede usarse en código publicado. Por eso `FormFields` usa el
   flag `DEV` de `esm-env` para que el aviso de campo no soportado no llegue a producción. No lo

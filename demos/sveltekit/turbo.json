@@ -1,6 +1,12 @@
 {
 	"extends": ["//"],
 	"tasks": {
+		"check": {
+			"dependsOn": ["^build", "build"]
+		},
+		"check-types": {
+			"dependsOn": ["^build", "build"]
+		},
 		"test": {
 			"dependsOn": ["^build", "build"]
 		}

@@ -24,7 +24,13 @@ export default defineConfig({
 	webServer: {
 		// `--host 127.0.0.1`: por defecto `vite preview` escucha en `localhost`, que en esta
 		// máquina resuelve a ::1, y Playwright sondea la `url` en IPv4.
-		command: `bun run build && bunx vite preview --port ${PORT} --strictPort --host 127.0.0.1`,
+		//
+		// Solo construye si no hay build previo: bajo turbo, `test` depende de `build` (ver
+		// `turbo.json` de este paquete), y un segundo `vite build` aquí correría en paralelo con
+		// el `paraglide:compile` de `check-types`, que escribe el mismo `src/lib/paraglide` que
+		// el plugin de vite — dos escritores a la vez dejan ficheros a medias y svelte-check
+		// muere con «is not a module». Si existe `.svelte-kit/output` se asume que está al día.
+		command: `[ -d .svelte-kit/output ] || bun run build; bunx vite preview --port ${PORT} --strictPort --host 127.0.0.1`,
 		url: `http://127.0.0.1:${PORT}`,
 		reuseExistingServer: !process.env.CI,
 		timeout: 240_000,
