@@ -40,12 +40,14 @@ jobs:
 
       # Con changesets pendientes: abre/actualiza el PR "chore: version packages".
       # Sin changesets pendientes (es decir, al mergear ese PR): publica en GitHub Packages.
-      - uses: changesets/action@v1
+      # v2: la CLI v3 cambió el formato de salida del publish y la v1 no la entiende —
+      # publicaba, pero sin crear tags ni GitHub Releases. v2 lee la salida por NDJSON.
+      - uses: changesets/action@v2
         with:
-          version: bun run version-packages
-          publish: bun run release
-          commit: 'chore: version packages'
-          title: 'chore: version packages'
+          version-script: bun run version-packages
+          publish-script: bun run release
+          commit-message: 'chore: version packages'
+          pr-title: 'chore: version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
