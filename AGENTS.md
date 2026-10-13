@@ -56,7 +56,9 @@ completo está en [`docs/plans/`](docs/plans) y el estado de cada consumidor en
 
 Usa **bun**. Todo se lanza desde la raíz salvo que se diga lo contrario.
 
-- `bun install` — instala y ejecuta `simple-git-hooks`.
+- `bun install` — instala y ejecuta `simple-git-hooks` (solo fuera de CI: el `postinstall` lo
+  salta si `CI` está definido, para que los `git push`/`git commit` de los workflows, como el del
+  `changesets/action`, no disparen el hook de pre-push).
 - `bun run build` — `turbo run build`. `tsup` en `core`/`auth`, `svelte-package --input=src` en
   `ui`, `vite build` en el demo (que hace `prisma generate` antes).
 - `bun run dev` — `turbo run dev` (watch de `tsup`/`svelte-package` + el demo).
