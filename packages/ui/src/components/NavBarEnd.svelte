@@ -7,6 +7,7 @@
 	import ButtonSignOut from './ButtonSignOut.svelte';
 	import Link from './Link.svelte';
 	import { defaultNavBarEndStrings, type NavBarEndStrings } from './NavBarEnd.strings.js';
+	import { getUiStrings } from '../strings/context.js';
 	import type { SessionUser, SignOutClient } from '../types.js';
 	import { cn } from '../utils.js';
 
@@ -60,7 +61,8 @@
 		...rest
 	}: Props = $props();
 
-	const t = $derived({ ...defaultNavBarEndStrings, ...strings });
+	const contextStrings = getUiStrings();
+	const t = $derived({ ...defaultNavBarEndStrings, ...contextStrings.navBarEnd, ...strings });
 
 	// Estado de los dropdowns, sólo para `aria-expanded`: daisyUI los muestra por CSS cuando el
 	// contenedor tiene `:focus-within`, así que "hay foco dentro" es exactamente "está abierto".

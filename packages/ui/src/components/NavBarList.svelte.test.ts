@@ -64,4 +64,21 @@ describe('NavBarList', () => {
 		expect(list?.className).toContain('p-0');
 		expect(list?.className).not.toContain('p-4');
 	});
+
+	it('reparte la prop ids a los enlaces internos, por clave del mapa', () => {
+		// Es el anclaje de los tours guiados (T14.1): sin esta prop, un consumidor con tour
+		// tenía que reimplantar la lista entera para poner `id` a cada `<a>`.
+		const routes = {
+			'/': { label: 'Inicio', showInMenu: true },
+			'/tienda': { label: 'Tienda', showInMenu: true }
+		} satisfies RouteMap;
+
+		const { container } = render(NavBarList, {
+			routes,
+			ids: { '/tienda': 'tour-tienda' }
+		});
+
+		expect(container.querySelector('a[href="/"]')?.getAttribute('id')).toBeNull();
+		expect(container.querySelector('a[href="/tienda"]')?.getAttribute('id')).toBe('tour-tienda');
+	});
 });

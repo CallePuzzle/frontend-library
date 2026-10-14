@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { defaultDrawerStrings, type DrawerStrings } from './Drawer.strings.js';
+	import { getUiStrings } from '../strings/context.js';
 	import { cn } from '../utils.js';
 
 	export type Props = {
@@ -28,7 +29,8 @@
 		...rest
 	}: Props = $props();
 
-	const t = $derived({ ...defaultDrawerStrings, ...strings });
+	const contextStrings = getUiStrings();
+	const t = $derived({ ...defaultDrawerStrings, ...contextStrings.drawer, ...strings });
 
 	// Derivado de `$props.id()`, nunca un id fijo: dos drawers en la misma página no se pisan.
 	const uid = $props.id();

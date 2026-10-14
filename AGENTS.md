@@ -105,6 +105,7 @@ packages/ui/src/
   components/*.strings.ts      su diccionario de textos + defaults en inglés
   components/index.ts          barrel de componentes (lo consume src/index.ts)
   strings/common.ts            commonStrings: los textos repetidos
+  strings/context.ts           setUiStrings/getUiStrings: defaults de textos por app vía contexto
   styles/index.css             la hoja publicada como "./styles.css"
   types.ts                     SessionUser, SignOutClient, MagicLinkClient, EmailOtpClient,
                                AuthCallResult, AuthCallError

@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { BetterAuthPlugin } from 'better-auth';
-import { emailOtpPreset, getBetterAuth, magicLinkPreset } from './server.js';
+import {
+	emailOtpPreset,
+	emailOtpRateLimitRules,
+	getBetterAuth,
+	magicLinkPreset
+} from './server.js';
 
 const marker = { id: 'marker-plugin' } satisfies BetterAuthPlugin;
 
@@ -62,5 +67,34 @@ describe('presets', () => {
 
 		// @ts-expect-error falta la función de envío del OTP.
 		expect(() => emailOtpPreset()).toBeTypeOf('function');
+	});
+});
+
+describe('emailOtpRateLimitRules', () => {
+	it('cubre pedir y canjear el OTP, con 3 por minuto por defecto', () => {
+		const rules = emailOtpRateLimitRules();
+
+		expect(rules['/email-otp/send-verification-otp']).toEqual({ window: 60, max: 3 });
+		expect(rules['/sign-in/email-otp']).toEqual({ window: 60, max: 3 });
+		expect(Object.keys(rules)).toHaveLength(2);
+	});
+
+	it('acepta ventana y máximo propios', () => {
+		const rules = emailOtpRateLimitRules({ window: 120, max: 5 });
+
+		expect(rules['/email-otp/send-verification-otp']).toEqual({ window: 120, max: 5 });
+		expect(rules['/sign-in/email-otp']).toEqual({ window: 120, max: 5 });
+	});
+
+	it('encajan en rateLimit.customRules de getBetterAuth', () => {
+		const auth = getBetterAuth({
+			baseURL: 'http://localhost',
+			rateLimit: { customRules: emailOtpRateLimitRules() }
+		});
+
+		expect(auth.options.rateLimit?.customRules?.['/sign-in/email-otp']).toEqual({
+			window: 60,
+			max: 3
+		});
 	});
 });

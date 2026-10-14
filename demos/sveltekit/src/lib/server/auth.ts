@@ -1,6 +1,7 @@
 import { dev } from '$app/environment';
 import {
 	emailOtpPreset,
+	emailOtpRateLimitRules,
 	getBetterAuth,
 	magicLinkPreset,
 	type SendMagicLink,
@@ -60,12 +61,12 @@ const devSendVerificationOtp: SendVerificationOtp = async ({ email, otp, type })
 export const auth = getBetterAuth({
 	database: prismaAdapter(db, { provider: 'sqlite' }),
 	// El rate limit de better-auth solo se activa en producción por defecto; los endpoints que
-	// mandan credenciales por correo conviene limitarlos siempre.
+	// mandan credenciales por correo conviene limitarlos siempre. Las dos reglas del OTP vienen
+	// del helper de la librería.
 	rateLimit: {
 		customRules: {
 			'/sign-in/magic-link': { window: 60, max: 3 },
-			'/email-otp/send-verification-otp': { window: 60, max: 3 },
-			'/sign-in/email-otp': { window: 60, max: 3 }
+			...emailOtpRateLimitRules()
 		}
 	},
 	plugins: [magicLinkPreset(devSendMagicLink), emailOtpPreset(devSendVerificationOtp)]

@@ -6,6 +6,7 @@
 		defaultUserNotLoggedStrings,
 		type UserNotLoggedStrings
 	} from './UserNotLogged.strings.js';
+	import { getUiStrings } from '../strings/context.js';
 	import { cn } from '../utils.js';
 
 	export type Props = {
@@ -24,7 +25,12 @@
 
 	let { text, children, action, class: className, strings, ...rest }: Props = $props();
 
-	const t = $derived({ ...defaultUserNotLoggedStrings, ...strings });
+	const contextStrings = getUiStrings();
+	const t = $derived({
+		...defaultUserNotLoggedStrings,
+		...contextStrings.userNotLogged,
+		...strings
+	});
 	const message = $derived(text ?? t.text);
 </script>
 

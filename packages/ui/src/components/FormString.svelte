@@ -5,6 +5,7 @@
 	import type { SuperFormData } from 'sveltekit-superforms/client';
 	import { cn } from '../utils.js';
 	import { defaultFormStringStrings, type FormStringStrings } from './FormString.strings.js';
+	import { getUiStrings } from '../strings/context.js';
 
 	type Props = {
 		/** El objeto que devuelve `superForm()`. */
@@ -47,7 +48,8 @@
 		...rest
 	}: Props = $props();
 
-	const t = $derived({ ...defaultFormStringStrings, ...strings });
+	const contextStrings = getUiStrings();
+	const t = $derived({ ...defaultFormStringStrings, ...contextStrings.formString, ...strings });
 
 	// `field` llega como string: los campos se generan en tiempo de ejecución a partir del
 	// schema (`zodToFieldsJsonSchema`), así que no hay forma de que TypeScript verifique

@@ -15,6 +15,7 @@
 		defaultFormLoginMagicLinkStrings,
 		type FormLoginMagicLinkStrings
 	} from './FormLoginMagicLink.strings.js';
+	import { getUiStrings } from '../strings/context.js';
 
 	type Props = {
 		/**
@@ -28,7 +29,11 @@
 		 * se renderizan solos, porque `FormFields` los deriva del schema en tiempo de ejecución.
 		 */
 		schema?: LoginSchema;
-		/** A dónde vuelve el usuario tras pinchar el enlace del correo. */
+		/**
+		 * A dónde vuelve el usuario tras pinchar el enlace del correo. Es una **URL cruda para
+		 * better-auth** (se la pasamos tal cual al cliente): no pasa por `resolve()`, así que en
+		 * una app con `paths.base` ha de incluir el base path.
+		 */
 		callbackURL?: string;
 		/** Pinta `SuperDebug` bajo el formulario. Solo para desarrollo. */
 		debug?: boolean;
@@ -52,7 +57,12 @@
 		...rest
 	}: Props = $props();
 
-	const t = $derived({ ...defaultFormLoginMagicLinkStrings, ...strings });
+	const contextStrings = getUiStrings();
+	const t = $derived({
+		...defaultFormLoginMagicLinkStrings,
+		...contextStrings.formLoginMagicLink,
+		...strings
+	});
 
 	// El schema por defecto se construye **por instancia**, nunca en scope de módulo: así los
 	// textos (que el consumidor puede haber traducido) se resuelven en render.

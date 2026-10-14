@@ -3,6 +3,17 @@ export * from './components/index.js';
 export { cn } from './utils.js';
 export { commonStrings, type CommonStrings } from './strings/common.js';
 
+/**
+ * Defaults de textos por app (contexto de Svelte): la alternativa a repetir la prop `strings`
+ * en cada punto de uso. Prop `strings` > contexto > default en inglés.
+ */
+export {
+	getUiStrings,
+	setUiStrings,
+	type UiStrings,
+	type UiStringsMap
+} from './strings/context.js';
+
 export type {
 	AuthCallError,
 	AuthCallResult,

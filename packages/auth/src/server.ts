@@ -20,6 +20,43 @@ export type SendVerificationOtp = EmailOtpPluginOptions['sendVerificationOTP'];
 /** Resto de opciones del OTP por email (`otpLength`, `expiresIn`, `allowedAttempts`, …). */
 export type EmailOtpPresetOptions = Omit<EmailOtpPluginOptions, 'sendVerificationOTP'>;
 
+/** Una regla de rate limit de better-auth: ventana en segundos y máximo de peticiones. */
+export type RateLimitRule = {
+	window: number;
+	max: number;
+};
+
+/** Las `customRules` del `rateLimit` de better-auth, tal y como las tipa better-auth. */
+export type RateLimitCustomRules = NonNullable<
+	NonNullable<BetterAuthOptions['rateLimit']>['customRules']
+>;
+
+/**
+ * Reglas de rate limit para los dos endpoints que el flujo de OTP por email deja expuestos:
+ * pedir el código (`/email-otp/send-verification-otp`) y canjearlo (`/sign-in/email-otp`).
+ *
+ * El rate limit de better-auth no se aplica en desarrollo por defecto, y estas son las rutas
+ * por donde alguien puede inundar un buzón o intentar adivinar el código. Son las reglas que
+ * traen puestos el demo y el consumidor principal (3 peticiones por minuto por IP); pásalas
+ * siempre, o fija las tuyas:
+ *
+ * ```ts
+ * export const auth = getBetterAuth({
+ * 	// …
+ * 	rateLimit: { customRules: emailOtpRateLimitRules() }
+ * });
+ * ```
+ */
+export function emailOtpRateLimitRules({
+	window = 60,
+	max = 3
+}: Partial<RateLimitRule> = {}): RateLimitCustomRules {
+	return {
+		'/email-otp/send-verification-otp': { window, max },
+		'/sign-in/email-otp': { window, max }
+	};
+}
+
 /**
  * Crea la instancia de better-auth del servidor.
  *

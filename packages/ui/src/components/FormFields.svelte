@@ -6,6 +6,7 @@
 	import type { SuperFormData } from 'sveltekit-superforms/client';
 	import { cn } from '../utils.js';
 	import { defaultFormFieldsStrings, type FormFieldsStrings } from './FormFields.strings.js';
+	import { getUiStrings } from '../strings/context.js';
 	import FormCheckbox from './FormCheckbox.svelte';
 	import FormNumber from './FormNumber.svelte';
 	import FormSelect from './FormSelect.svelte';
@@ -25,7 +26,8 @@
 
 	let { form, formData, fields, class: className, strings, ...rest }: Props = $props();
 
-	const t = $derived({ ...defaultFormFieldsStrings, ...strings });
+	const contextStrings = getUiStrings();
+	const t = $derived({ ...defaultFormFieldsStrings, ...contextStrings.formFields, ...strings });
 
 	/**
 	 * Traduce el `format` del JSON Schema al `type` del input. Lo que no esté en la tabla

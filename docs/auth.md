@@ -3,11 +3,11 @@
 `@callepuzzle/auth` es un wrapper **fino** de better-auth. No impone plugins, no envía correo, no
 guarda sesión en ningún store y no declara tus tipos globales. Lo que aporta:
 
-| Subpath                    | Exporta                                                                                                                                         | Para qué                                         |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `@callepuzzle/auth/client` | `createCallepuzzleAuthClient`, `CallepuzzleAuthClient`, `AuthClient`, `Session`, `SessionOf`                                                    | El cliente del navegador, como **factoría**      |
-| `@callepuzzle/auth/server` | `getBetterAuth`, `magicLinkPreset`, `emailOtpPreset`, `SendMagicLink`, `SendVerificationOtp`, `MagicLinkPresetOptions`, `EmailOtpPresetOptions` | La instancia del servidor y los presets de login |
-| `@callepuzzle/auth/hooks`  | `betterAuthHandle`, `BetterAuthLocals`                                                                                                          | El `Handle` de SvelteKit                         |
+| Subpath                    | Exporta                                                                                                                                                                   | Para qué                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `@callepuzzle/auth/client` | `createCallepuzzleAuthClient`, `CallepuzzleAuthClient`, `AuthClient`, `Session`, `SessionOf`                                                                              | El cliente del navegador, como **factoría**      |
+| `@callepuzzle/auth/server` | `getBetterAuth`, `magicLinkPreset`, `emailOtpPreset`, `SendMagicLink`, `SendVerificationOtp`, `MagicLinkPresetOptions`, `EmailOtpPresetOptions`, `emailOtpRateLimitRules` | La instancia del servidor y los presets de login |
+| `@callepuzzle/auth/hooks`  | `betterAuthHandle`, `BetterAuthLocals`                                                                                                                                    | El `Handle` de SvelteKit                         |
 
 Cliente y servidor están en subpaths separados a propósito: reexportarlos desde el mismo módulo
 arrastraba código de servidor al bundle del navegador.
@@ -111,6 +111,23 @@ export const sendOtpEmail: SendVerificationOtp = async ({ email, otp }) => {
 La librería no lo hace por ti a propósito: un envío falso escondido en un default es cómo se
 llega a producción sin correo.
 
+### Rate limit del OTP
+
+El rate limit de better-auth no se aplica en desarrollo por defecto, y los dos endpoints del
+flujo OTP son justo los que alguien puede abusar (inundar un buzón, adivinar el código).
+`emailOtpRateLimitRules()` devuelve las reglas que traen puestas el demo y los consumidores
+reales —3 peticiones por minuto por IP— para pedir y para canjear el código:
+
+```ts
+import { emailOtpRateLimitRules, getBetterAuth, emailOtpPreset } from '@callepuzzle/auth/server';
+
+export const auth = getBetterAuth({
+	// …
+	rateLimit: { customRules: emailOtpRateLimitRules() }
+	// ajusta con `emailOtpRateLimitRules({ window: 120, max: 5 })` si quieres otros números
+});
+```
+
 Con magic link es igual:
 
 ```ts
@@ -148,6 +165,16 @@ export const handle = sequence(betterAuthHandle(auth, building));
 
 El segundo argumento sale de `$app/environment` y **no es opcional**: durante el prerender no hay
 request real y better-auth necesita saberlo.
+
+El tercero es opcional. Con `{ skipAssets: true }`, el handle no resuelve sesión ni pasa por
+better-auth en peticiones de assets estáticos (`/_app/**`, el service worker y ficheros con
+extensión estática): un asset nunca resuelve sesión ni atiende `/api/auth/*`, así que el salto es
+seguro y se ahorra una llamada a `auth.api.getSession` por fichero servido. Recomendado en
+cualquier app que sirva assets por el mismo origin.
+
+```ts
+export const handle = sequence(betterAuthHandle(auth, building, { skipAssets: true }));
+```
 
 Si encadenas varios handles, este va antes de los que necesiten leer la sesión (logging con
 usuario, autorización) y después de los de seguridad puros (cabeceras, CSP).
@@ -324,6 +351,23 @@ const schema = createLoginSchema({ emailPlaceholder: 'tu@correo.es' }).extend({
 	accept: z.boolean().meta({ description: 'Acepto las condiciones' })
 });
 ```
+
+### Qué props de navegación son «ruta» y cuáles «URL cruda»
+
+La convención de la casa es que los `href` son la **clave del `RouteMap`** y la librería los
+resuelve con `resolve()` de `$app/paths` (respeta `paths.base`). Las excepciones, para que no te
+sorprendan:
+
+| Prop                                         | Tratamiento              | Nota                                                                                   |
+| -------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------- |
+| `Link.href`                                  | `resolve()`              | id de ruta                                                                             |
+| `DockLink` (el `route.id` del mapa)          | `resolve()`              | id de ruta                                                                             |
+| `NavBarEnd.profileHref`                      | `resolve()` (vía `Link`) | id de ruta                                                                             |
+| `NavBarEnd.notificationsHref`                | `resolve()` (vía `Link`) | id de ruta                                                                             |
+| `ButtonSignOut.redirectTo`                   | `resolve()`              | id de ruta (`null` para no navegar)                                                    |
+| `FormLoginOtp.startOverHref`                 | `resolve()`              | id de ruta                                                                             |
+| `FormLoginMagicLink.callbackURL`             | **URL cruda**            | se la pasa tal cual a better-auth, que no conoce tu `paths.base`: inclúyelo si lo usas |
+| `FormLoginOtp.onSuccess` / navegación propia | —                        | tus rutas, tus reglas: la librería no navega por su cuenta                             |
 
 ### Login en un modal
 

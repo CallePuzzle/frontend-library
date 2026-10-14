@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { HTMLDialogAttributes } from 'svelte/elements';
 	import { defaultModalStrings, type ModalStrings } from './Modal.strings.js';
+	import { getUiStrings } from '../strings/context.js';
 	import { cn } from '../utils.js';
 
 	export type Props = {
@@ -44,7 +45,8 @@
 		...rest
 	}: Props = $props();
 
-	const t = $derived({ ...defaultModalStrings, ...strings });
+	const contextStrings = getUiStrings();
+	const t = $derived({ ...defaultModalStrings, ...contextStrings.modal, ...strings });
 
 	// `bind:this` + `$state`, no una búsqueda del `<dialog>` por id en `onMount`: así la
 	// referencia es reactiva y `showModal()` nunca puede lanzar (el `?.` cubre el SSR y el

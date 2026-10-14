@@ -5,6 +5,7 @@
 	import type { SuperFormData } from 'sveltekit-superforms/client';
 	import { cn } from '../utils.js';
 	import { defaultFormNumberStrings, type FormNumberStrings } from './FormNumber.strings.js';
+	import { getUiStrings } from '../strings/context.js';
 
 	type Props = {
 		/** El objeto que devuelve `superForm()`. */
@@ -52,7 +53,8 @@
 		...rest
 	}: Props = $props();
 
-	const t = $derived({ ...defaultFormNumberStrings, ...strings });
+	const contextStrings = getUiStrings();
+	const t = $derived({ ...defaultFormNumberStrings, ...contextStrings.formNumber, ...strings });
 
 	// Mismo motivo que en `FormString`: el nombre del campo se conoce en tiempo de ejecución
 	// (sale del schema), así que el cast a `FormPath<T>` se concentra aquí.

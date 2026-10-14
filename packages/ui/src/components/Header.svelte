@@ -7,6 +7,7 @@
 	import Link from './Link.svelte';
 	import NavBarList from './NavBarList.svelte';
 	import { defaultHeaderStrings, type HeaderStrings } from './Header.strings.js';
+	import { getUiStrings } from '../strings/context.js';
 	import { cn } from '../utils.js';
 
 	export type Props = {
@@ -50,7 +51,8 @@
 		...rest
 	}: Props = $props();
 
-	const t = $derived({ ...defaultHeaderStrings, ...strings });
+	const contextStrings = getUiStrings();
+	const t = $derived({ ...defaultHeaderStrings, ...contextStrings.header, ...strings });
 </script>
 
 {#snippet brand()}

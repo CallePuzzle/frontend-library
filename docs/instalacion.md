@@ -145,6 +145,34 @@ El theming es el de daisyUI, en tu propio CSS:
 
 O, para usar uno de los que trae daisyUI: `@plugin "daisyui" { themes: dark --default; }`.
 
+### Si ya tienes tu propio pipeline de Tailwind
+
+La hoja única es la vía rápida, no la única. Si tu `app.css` ya declara `@import 'tailwindcss'`
+—porque usas plugins propios (`@tailwindcss/forms`, `@tailwindcss/typography`, Flowbite…) o
+quieres una configuración de daisyUI muy concreta— **no importes `styles.css`**: duplicarías el
+`@import` y la configuración del plugin. Declara tu pipeline como siempre y añade el `@source`
+que hace que Tailwind escanee el paquete instalado:
+
+```css
+/* src/app.css */
+@import 'tailwindcss';
+@plugin 'daisyui' {
+	themes: dark; /* tu configuración */
+}
+@plugin '@tailwindcss/forms';
+/* …los plugins que ya tuvieras */
+
+/* Escanea los componentes de la librería: Tailwind 4 no mira dentro de node_modules. */
+@source '../node_modules/@callepuzzle/svelte-ui/dist';
+```
+
+La ruta apunta a `dist` a propósito: es lo único que publica el paquete. Ojo con una cosa: si el
+`@source` falta, el síntoma es el peor posible — **los componentes se renderizan sin una sola
+clase de estilo y sin ningún error**. Verifícalo tras un `build` con el grep de abajo.
+
+Es la variante que trae puesta `donde-esta-tu-local` (tema `dark` propio más plugins de forms y
+typography), verificada en producción.
+
 ## 4. better-auth en el servidor
 
 La librería no impone plugins ni forma de enviar correo. Instancia better-auth con **tu**
@@ -403,15 +431,16 @@ bun run dev      # y mira que la navbar salga con estilo
 
 Fallos típicos:
 
-| Síntoma                                                                                                          | Causa                                                                                                                                                       |
-| ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Los componentes salen sin estilo, sin errores                                                                    | Falta `@import "@callepuzzle/svelte-ui/styles.css"` en `app.css`, o has puesto `@import "tailwindcss"` a mano sin el `@source` del paquete                  |
-| `[MISSING_EXPORT] "PinInput"` / `"REGEXP_ONLY_DIGITS"` `is not exported by "__vite-optional-peer-dep:bits-ui:…"` | Importas `@callepuzzle/svelte-ui/otp` sin `bits-ui` instalado. Salen **dos** errores, uno por símbolo, y solo en `vite build`: `svelte-check` no lo detecta |
-| `Property 'user' does not exist on type 'Locals'`                                                                | Falta la augmentación de `App.Locals` del [paso 6](#6-srcappdts)                                                                                            |
-| Los textos aparecen en inglés                                                                                    | No has pasado `strings` a ese componente. Ver [`i18n.md`](i18n.md)                                                                                          |
-| El menú sale vacío                                                                                               | Las rutas no declaran `showInMenu: true` (o `showInMobile` para el `Dock`)                                                                                  |
-| El dock no muestra una ruta que sí está en el menú                                                               | `{ mobile: true }` filtra **solo** por `showInMobile`: declara los dos flags                                                                                |
-| El idioma de la app no cambia los textos de la librería                                                          | Estás resolviendo los mensajes en scope de módulo. Ver [`i18n.md`](i18n.md)                                                                                 |
+| Síntoma                                                                                                          | Causa                                                                                                                                                                            |
+| ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Los componentes salen sin estilo, sin errores                                                                    | Falta `@import "@callepuzzle/svelte-ui/styles.css"` en `app.css`, o has puesto `@import "tailwindcss"` a mano sin el `@source` del paquete                                       |
+| Los componentes salen sin estilo, sin errores, con pipeline propio                                               | Falta `@source '../node_modules/@callepuzzle/svelte-ui/dist'` en tu `app.css`. Ver [«Si ya tienes tu propio pipeline de Tailwind»](#si-ya-tienes-tu-propio-pipeline-de-tailwind) |
+| `[MISSING_EXPORT] "PinInput"` / `"REGEXP_ONLY_DIGITS"` `is not exported by "__vite-optional-peer-dep:bits-ui:…"` | Importas `@callepuzzle/svelte-ui/otp` sin `bits-ui` instalado. Salen **dos** errores, uno por símbolo, y solo en `vite build`: `svelte-check` no lo detecta                      |
+| `Property 'user' does not exist on type 'Locals'`                                                                | Falta la augmentación de `App.Locals` del [paso 6](#6-srcappdts)                                                                                                                 |
+| Los textos aparecen en inglés                                                                                    | No has pasado `strings` a ese componente. Ver [`i18n.md`](i18n.md)                                                                                                               |
+| El menú sale vacío                                                                                               | Las rutas no declaran `showInMenu: true` (o `showInMobile` para el `Dock`)                                                                                                       |
+| El dock no muestra una ruta que sí está en el menú                                                               | `{ mobile: true }` filtra **solo** por `showInMobile`: declara los dos flags                                                                                                     |
+| El idioma de la app no cambia los textos de la librería                                                          | Estás resolviendo los mensajes en scope de módulo. Ver [`i18n.md`](i18n.md)                                                                                                      |
 
 ## Cómo se ha verificado este documento
 

@@ -5,6 +5,7 @@
 		type LoginSchema
 	} from '@callepuzzle/core/schema';
 	import Inbox from '@lucide/svelte/icons/inbox';
+	import { resolve } from '$app/paths';
 	import { PinInput, REGEXP_ONLY_DIGITS, type PinInputRootSnippetProps } from 'bits-ui';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { zod4, zod4Client } from 'sveltekit-superforms/adapters';
@@ -13,6 +14,7 @@
 	import { cn } from '../utils.js';
 	import FormFields from './FormFields.svelte';
 	import { defaultFormLoginOtpStrings, type FormLoginOtpStrings } from './FormLoginOtp.strings.js';
+	import { getUiStrings } from '../strings/context.js';
 
 	type Props = {
 		/**
@@ -34,8 +36,10 @@
 		 */
 		onSuccess?: () => void | Promise<void>;
 		/**
-		 * Destino del enlace «empezar de nuevo». Si no se pasa, el enlace no se pinta: la
-		 * librería no decide las rutas del consumidor.
+		 * Destino del enlace «empezar de nuevo». Es la **clave** del `RouteMap` del consumidor, no
+		 * una URL ya resuelta: se pasa por `resolve()` como el resto de enlaces de la librería,
+		 * para respetar `paths.base`. Si no se pasa, el enlace no se pinta: la librería no
+		 * decide las rutas del consumidor.
 		 */
 		startOverHref?: string;
 		class?: string;
@@ -53,7 +57,16 @@
 		...rest
 	}: Props = $props();
 
-	const t = $derived({ ...defaultFormLoginOtpStrings, ...strings });
+	const contextStrings = getUiStrings();
+	const t = $derived({ ...defaultFormLoginOtpStrings, ...contextStrings.formLoginOtp, ...strings });
+
+	// Mismo estrechado que en `Link`: `resolve()` sólo acepta los ids de ruta del proyecto que
+	// compila, que aquí es la librería. El tipado fuerte lo pone el consumidor con `RouteMap<RouteId>`.
+	const startOver = $derived(
+		startOverHref === undefined
+			? undefined
+			: resolve(startOverHref as Parameters<typeof resolve>[0])
+	);
 
 	// El schema por defecto se construye **por instancia**, nunca en scope de módulo: así los
 	// textos (que el consumidor puede haber traducido) se resuelven en render.
@@ -197,7 +210,7 @@
 
 	{#if startOverHref}
 		<div class="flex justify-center">
-			<a class="btn btn-error" href={startOverHref} data-sveltekit-reload>{t.startOver}</a>
+			<a class="btn btn-error" href={startOver} data-sveltekit-reload>{t.startOver}</a>
 		</div>
 	{/if}
 </div>

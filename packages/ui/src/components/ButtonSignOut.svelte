@@ -7,6 +7,7 @@
 		defaultButtonSignOutStrings,
 		type ButtonSignOutStrings
 	} from './ButtonSignOut.strings.js';
+	import { getUiStrings } from '../strings/context.js';
 	import type { SignOutClient } from '../types.js';
 	import { cn } from '../utils.js';
 
@@ -37,7 +38,12 @@
 		...rest
 	}: Props = $props();
 
-	const t = $derived({ ...defaultButtonSignOutStrings, ...strings });
+	const contextStrings = getUiStrings();
+	const t = $derived({
+		...defaultButtonSignOutStrings,
+		...contextStrings.buttonSignOut,
+		...strings
+	});
 
 	async function signOut() {
 		await authClient.signOut();
