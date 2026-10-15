@@ -18,7 +18,8 @@
 			schema: { control: false },
 			onSuccess: { control: false },
 			startOverHref: { control: 'text' },
-			debug: { control: 'boolean' }
+			debug: { control: 'boolean' },
+			length: { control: 'number' }
 		}
 	});
 </script>
@@ -27,6 +28,12 @@
 <Story name="Éxito" />
 
 <Story name="Con enlace para empezar de nuevo" args={{ startOverHref: '/' }} />
+
+<!--
+	Con `length: 8`, el segundo paso pinta ocho casillas y el copy menciona ocho dígitos. Hay
+	que enviar el correo para llegar a ellas; el cliente falso sigue aceptando `123456`.
+-->
+<Story name="Código de 8 dígitos" args={{ length: 8 }} />
 
 <Story
 	name="Error al pedir el código"
@@ -59,7 +66,7 @@
 			stepEmail: 'Correo',
 			stepOtp: 'Código',
 			otpLabel: 'Código de un solo uso',
-			otpDescription: 'Teclea el código de 6 dígitos que te hemos enviado.',
+			otpDescription: (digits) => `Teclea el código de ${digits} dígitos que te hemos enviado.`,
 			success: 'Sesión iniciada.',
 			rateLimited: 'Demasiados intentos. Vuelve a probar en unos minutos.',
 			invalidCode: 'Ese código no es válido. Compruébalo e inténtalo otra vez.',

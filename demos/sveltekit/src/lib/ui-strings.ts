@@ -84,7 +84,7 @@ export function getUiStrings(): UiStrings {
 			stepEmail: m.ui_otp_step_email(),
 			stepOtp: m.ui_otp_step_code(),
 			otpLabel: m.ui_otp_label(),
-			otpDescription: m.ui_otp_description(),
+			otpDescription: (digits: number) => m.ui_otp_description({ digits }),
 			success: m.ui_otp_success(),
 			rateLimited: m.ui_rate_limited(),
 			invalidCode: m.ui_otp_invalid_code(),

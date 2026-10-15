@@ -25,8 +25,17 @@
 		/**
 		 * Schema del primer paso. Por defecto, `createLoginSchema()` con los textos en inglés.
 		 * Pásalo para traducirlo o para extenderlo (`schema.extend({ … })`).
+		 *
+		 * Ojo: `superForm` no soporta cambiar el schema, así que se lee **una vez por
+		 * instancia**: si lo pasas traducido en un `$derived` y el idioma cambia con el
+		 * formulario abierto, los mensajes no se re-traducen hasta re-montar el componente.
 		 */
 		schema?: LoginSchema;
+		/**
+		 * Número de dígitos del código. Ha de coincidir con el `otpLength` del `emailOtpPreset`
+		 * del servidor (better-auth genera 6 por defecto).
+		 */
+		length?: number;
 		/** Pinta `SuperDebug` bajo el formulario. Solo para desarrollo. */
 		debug?: boolean;
 		/**
@@ -49,6 +58,7 @@
 	let {
 		authClient,
 		schema,
+		length = 6,
 		debug = false,
 		onSuccess,
 		startOverHref,
@@ -189,7 +199,7 @@
 				<PinInput.Root
 					bind:value={otp}
 					class="group/pininput flex items-center gap-1 has-disabled:opacity-30"
-					maxlength={6}
+					maxlength={length}
 					pattern={REGEXP_ONLY_DIGITS}
 					aria-label={t.otpLabel}
 					onComplete={verify}
@@ -203,7 +213,7 @@
 				{#if message}
 					{@render notice(message.type, message.text)}
 				{/if}
-				<p class="fieldset-label py-2">{t.otpDescription}</p>
+				<p class="fieldset-label py-2">{t.otpDescription(length)}</p>
 			{/if}
 		</div>
 	{/if}

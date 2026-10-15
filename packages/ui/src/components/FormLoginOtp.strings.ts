@@ -14,8 +14,11 @@ export type FormLoginOtpStrings = {
 	stepOtp: string;
 	/** Etiqueta accesible del grupo de casillas. */
 	otpLabel: string;
-	/** Explicación bajo las casillas. */
-	otpDescription: string;
+	/**
+	 * Explicación bajo las casillas. Recibe el número de dígitos (la prop `length`), para que
+	 * el copy no diga «6 dígitos» con un servidor configurado a otro largo.
+	 */
+	otpDescription: (digits: number) => string;
 	/** Sesión iniciada. */
 	success: string;
 	/** Demasiadas peticiones (HTTP 429). */
@@ -35,7 +38,7 @@ export const defaultFormLoginOtpStrings: FormLoginOtpStrings = {
 	stepEmail: 'Email',
 	stepOtp: 'Code',
 	otpLabel: 'One-time code',
-	otpDescription: 'Enter the 6-digit code we sent to your email.',
+	otpDescription: (digits) => `Enter the ${digits}-digit code we sent to your email.`,
 	success: 'You are signed in.',
 	rateLimited: 'Too many attempts. Please try again in a few minutes.',
 	invalidCode: 'That code is not valid. Please check it and try again.',

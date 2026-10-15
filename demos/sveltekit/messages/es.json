@@ -30,7 +30,7 @@
 	"ui_otp_step_email": "Correo",
 	"ui_otp_step_code": "Código",
 	"ui_otp_label": "Código de un solo uso",
-	"ui_otp_description": "Teclea el código de 6 cifras que te hemos enviado por correo.",
+	"ui_otp_description": "Teclea el código de {digits} cifras que te hemos enviado por correo.",
 	"ui_otp_success": "Ya has iniciado sesión.",
 	"ui_otp_invalid_code": "Ese código no es válido. Compruébalo y vuelve a intentarlo.",
 	"ui_otp_start_over": "Empezar de nuevo",

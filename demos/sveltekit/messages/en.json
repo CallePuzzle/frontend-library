@@ -30,7 +30,7 @@
 	"ui_otp_step_email": "Email",
 	"ui_otp_step_code": "Code",
 	"ui_otp_label": "One-time code",
-	"ui_otp_description": "Enter the 6-digit code we sent to your email.",
+	"ui_otp_description": "Enter the {digits}-digit code we sent to your email.",
 	"ui_otp_success": "You are signed in.",
 	"ui_otp_invalid_code": "That code is not valid. Please check it and try again.",
 	"ui_otp_start_over": "Start over",

@@ -27,6 +27,10 @@
 		 * Schema del formulario. Por defecto, `createLoginSchema()` con los textos en inglés.
 		 * Pásalo para traducirlo o para extenderlo (`schema.extend({ … })`): los campos extra
 		 * se renderizan solos, porque `FormFields` los deriva del schema en tiempo de ejecución.
+		 *
+		 * Ojo: `superForm` no soporta cambiar el schema, así que se lee **una vez por
+		 * instancia**: si lo pasas traducido en un `$derived` y el idioma cambia con el
+		 * formulario abierto, los mensajes no se re-traducen hasta re-montar el componente.
 		 */
 		schema?: LoginSchema;
 		/**
