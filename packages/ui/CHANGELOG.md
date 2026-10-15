@@ -1,5 +1,22 @@
 # @callepuzzle/svelte-ui
 
+## 1.0.0
+
+### Major Changes
+
+- ce85e3d: Primera versión estable: los componentes con el patrón de textos por prop/contexto y snippets se
+  consideran estables tras la revisión completa del código y la auditoría de seguridad. Dos cambios
+  de API en esta release: `FormLoginOtp` añade la prop `length` (dígitos del código, 6 por defecto,
+  para cuadrar con el `otpLength` de `emailOtpPreset`) y su texto `otpDescription` pasa a ser una
+  función `(digits: number) => string`. Los próximos cambios incompatibles saldrán como major.
+
+### Patch Changes
+
+- d43b65f: `NavBarEnd` carga `user.image` con `referrerpolicy="no-referrer"`: si la URL del avatar es de un
+  tercero, no recibe la página desde la que se mira.
+- Updated dependencies [ce85e3d]
+  - @callepuzzle/core@1.0.0
+
 ## 0.2.0
 
 ### Minor Changes
