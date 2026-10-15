@@ -35,17 +35,33 @@ export type RateLimitCustomRules = NonNullable<
  * Reglas de rate limit para los dos endpoints que el flujo de OTP por email deja expuestos:
  * pedir el código (`/email-otp/send-verification-otp`) y canjearlo (`/sign-in/email-otp`).
  *
- * El rate limit de better-auth no se aplica en desarrollo por defecto, y estas son las rutas
- * por donde alguien puede inundar un buzón o intentar adivinar el código. Son las reglas que
- * traen puestos el demo y el consumidor principal (3 peticiones por minuto por IP); pásalas
- * siempre, o fija las tuyas:
+ * Son las rutas por donde alguien puede inundar un buzón o intentar adivinar el código, y estas
+ * son las reglas que traen puestas el demo y el consumidor principal (3 peticiones por minuto
+ * por IP). Pásalas siempre, o fija las tuyas:
  *
  * ```ts
  * export const auth = getBetterAuth({
  * 	// …
- * 	rateLimit: { customRules: emailOtpRateLimitRules() }
+ * 	rateLimit: { customRules: emailOtpRateLimitRules(), storage: 'database' },
+ * 	advanced: { ipAddress: { ipAddressHeaders: ['x-real-ip'] } }
  * });
  * ```
+ *
+ * Las reglas solas no bastan. Revisa estas tres cosas:
+ *
+ * - **Solo se aplican en producción.** better-auth activa el rate limit con
+ *   `NODE_ENV=production`; las `customRules` no lo encienden en desarrollo
+ *   (para eso, `rateLimit.enabled: true`).
+ * - **La IP sale de una cabecera.** Por defecto better-auth lee `x-forwarded-for`, que el cliente
+ *   puede inventarse si ningún proxy la reescribe: cambiándola en cada petición, el límite no
+ *   frena nada. Fija `advanced.ipAddress.ipAddressHeaders` a la cabecera que pone **tu** proxy
+ *   (`x-real-ip`, `cf-connecting-ip`, `fly-client-ip`…).
+ * - **El almacén por defecto es la memoria del proceso.** Con varias instancias o en serverless
+ *   cada una cuenta por su lado. Usa `rateLimit.storage: 'database'` (necesita la tabla
+ *   `rateLimit` en el esquema) o `secondaryStorage`.
+ *
+ * Adivinar el código además está acotado por el `allowedAttempts` del plugin (3 por defecto):
+ * tras ese número de fallos el OTP se invalida.
  */
 export function emailOtpRateLimitRules({
 	window = 60,
@@ -70,12 +86,20 @@ export function emailOtpRateLimitRules({
  * import { prismaAdapter } from 'better-auth/adapters/prisma';
  * import { sveltekitCookies } from 'better-auth/svelte-kit';
  * import { getRequestEvent } from '$app/server';
+ * import { env } from '$env/dynamic/private';
  *
  * export const auth = getBetterAuth({
+ * 	secret: env.BETTER_AUTH_SECRET,
+ * 	baseURL: env.BETTER_AUTH_URL,
  * 	database: prismaAdapter(prisma, { provider: 'postgresql' }),
  * 	plugins: [sveltekitCookies(getRequestEvent), emailOtpPreset(sendOtpEmail)]
  * });
  * ```
+ *
+ * `secret` y `baseURL` (o sus variables `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL`) son
+ * obligatorios: `betterAuthHandle` se niega a atender peticiones sin ellos. Sin `baseURL`,
+ * better-auth deduce la URL pública de las cabeceras `X-Forwarded-*` de la petición, y quien las
+ * controle decide a qué dominio apuntan los magic links.
  */
 export function getBetterAuth(options: BetterAuthOptions): ReturnType<typeof betterAuth> {
 	return betterAuth({

@@ -57,16 +57,21 @@ import { getBetterAuth, emailOtpPreset } from '@callepuzzle/auth/server';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { getRequestEvent } from '$app/server';
+import { env } from '$env/dynamic/private';
 import prisma from './db';
 import { sendOtpEmail } from './sender';
 
 export const auth = getBetterAuth({
 	secret: env.BETTER_AUTH_SECRET,
+	baseURL: env.BETTER_AUTH_URL,
 	database: prismaAdapter(prisma, { provider: 'postgresql' }),
 	plugins: [sveltekitCookies(getRequestEvent), emailOtpPreset(sendOtpEmail)]
 });
 ```
 
+- **`secret` y `baseURL` son obligatorios** (o `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL`):
+  `betterAuthHandle` no atiende peticiones sin ellos. Sin `baseURL`, better-auth deduce la URL de
+  los magic links de las cabeceras `X-Forwarded-*`, que controla quien hace la petición.
 - **Cero plugins por defecto** y merge explícito (`plugins: [...(options.plugins ?? [])]`): la
   librería no añade ni quita ninguno, así que no heredas tablas de esquema que nadie ha pedido.
 - Los presets exigen la función de envío como **primer argumento obligatorio**. No compila un
@@ -94,6 +99,11 @@ export const handle = sequence(betterAuthHandle(auth, building));
 Resuelve la sesión **una vez por request**, la deja en `event.locals.session` /
 `event.locals.user`, y delega en el handler de better-auth (que atiende `/api/auth/*`). El
 `building` sale de `$app/environment` y no es opcional: durante el prerender no hay request real.
+
+Fuera del build, en la primera petición comprueba que la instancia tiene `baseURL` y un secreto
+propio de al menos 32 caracteres; si no, no atiende ninguna petición. Con
+`betterAuthHandle(auth, building, { skipAssets: true })` no resuelve sesión en `/_app/**` ni en
+imágenes o fuentes (nunca en `__data.json`, `.json`, `.xml` ni `.txt`).
 
 El paquete **no** augmenta `App.Locals` (eso es de la app). Declara los dos campos en tu
 `src/app.d.ts`:

@@ -1,4 +1,5 @@
-import { dev } from '$app/environment';
+import { building, dev } from '$app/environment';
+import { env } from '$env/dynamic/private';
 import {
 	emailOtpPreset,
 	emailOtpRateLimitRules,
@@ -44,6 +45,22 @@ const devSendVerificationOtp: SendVerificationOtp = async ({ email, otp, type })
 	console.info('[demo · SOLO DESARROLLO] OTP (%s) para %s -> %s', type, email, otp);
 };
 
+// Valores de desarrollo: solo se usan con `dev`, nunca en un build. El puerto es el de `vite dev`.
+const DEV_URL = 'http://localhost:5173';
+const DEV_SECRET = 'demo-dev-secret-not-for-production-use';
+
+/**
+ * Lee una variable obligatoria. En desarrollo cae a un valor local; fuera de él, sin la variable
+ * no hay valor y `betterAuthHandle` rechaza la configuración en la primera petición.
+ *
+ * Durante el build no se lee el entorno (SvelteKit no lo permite en el prerender) y tampoco hace
+ * falta: no hay peticiones.
+ */
+function requiredEnv(name: 'BETTER_AUTH_URL' | 'BETTER_AUTH_SECRET', devValue: string) {
+	if (building) return undefined;
+	return env[name] || (dev ? devValue : undefined);
+}
+
 /**
  * Instancia de better-auth del servidor.
  *
@@ -59,10 +76,15 @@ const devSendVerificationOtp: SendVerificationOtp = async ({ email, otp, type })
  * devuelve SvelteKit).
  */
 export const auth = getBetterAuth({
+	// Sin estos dos, `betterAuthHandle` no atiende ninguna petición: sin `baseURL`, better-auth
+	// deduce la URL de los magic links de las cabeceras X-Forwarded-* de la petición.
+	secret: requiredEnv('BETTER_AUTH_SECRET', DEV_SECRET),
+	baseURL: requiredEnv('BETTER_AUTH_URL', DEV_URL),
 	database: prismaAdapter(db, { provider: 'sqlite' }),
-	// El rate limit de better-auth solo se activa en producción por defecto; los endpoints que
-	// mandan credenciales por correo conviene limitarlos siempre. Las dos reglas del OTP vienen
-	// del helper de la librería.
+	// Reglas para los endpoints que mandan credenciales por correo. Ojo: better-auth solo aplica
+	// el rate limit en producción, y estas reglas no lo encienden en desarrollo. En un despliegue
+	// real, además, hay que fijar `advanced.ipAddress.ipAddressHeaders` a la cabecera del proxy
+	// y un `storage` compartido (ver `emailOtpRateLimitRules` en `@callepuzzle/auth/server`).
 	rateLimit: {
 		customRules: {
 			'/sign-in/magic-link': { window: 60, max: 3 },

@@ -9,6 +9,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Solo lectura: el CI no escribe en el repo ni publica. Sin este bloque, el token hereda los
+# permisos por defecto del repositorio, que pueden ser de escritura.
+permissions:
+  contents: read
+
 env:
   TURBO_TELEMETRY_DISABLED: 1
   # `prisma generate` del demo exige que DATABASE_URL exista aunque el build no toque la BD.
@@ -19,9 +24,12 @@ jobs:
     name: lint + check-types + test + build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # El token no se queda en .git/config al alcance de dependencias y herramientas.
+          persist-credentials: false
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.3.14
 
@@ -29,7 +37,7 @@ jobs:
 
       # Caché local de turbo: evita repetir builds entre pushes de la misma rama.
       - name: Restaurar caché de turbo
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ github.job }}-${{ github.sha }}
@@ -52,16 +60,19 @@ jobs:
     name: check-publish (publint + attw)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # El token no se queda en .git/config al alcance de dependencias y herramientas.
+          persist-credentials: false
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.3.14
 
       - run: bun install --frozen-lockfile
 
       - name: Restaurar caché de turbo
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ github.job }}-${{ github.sha }}
@@ -77,16 +88,19 @@ jobs:
     name: build-storybook
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # El token no se queda en .git/config al alcance de dependencias y herramientas.
+          persist-credentials: false
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.3.14
 
       - run: bun install --frozen-lockfile
 
       - name: Restaurar caché de turbo
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ github.job }}-${{ github.sha }}
@@ -96,7 +110,7 @@ jobs:
 
       - run: bunx turbo run build-storybook --filter=@callepuzzle/svelte-ui
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: storybook-static
           path: packages/ui/storybook-static

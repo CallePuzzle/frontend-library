@@ -36,7 +36,13 @@
 		 * ya no embute ningún formulario de login: el flujo de auth es del consumidor.
 		 */
 		login?: Snippet;
-		/** Avatar propio. Recibe el usuario. Sin él se usa `user.image` o su inicial. */
+		/**
+		 * Avatar propio. Recibe el usuario. Sin él se usa `user.image` o su inicial.
+		 *
+		 * `user.image` se carga tal cual, sin enviar `Referer`. Si la URL la elige el usuario, su
+		 * servidor ve la IP de quien mire el avatar: en ese caso sírvela desde tu dominio (proxy o
+		 * subida propia) o pasa este snippet.
+		 */
 		avatar?: Snippet<[SessionUser]>;
 		/** Entradas extra (`<li>`) al final del menú de usuario. */
 		menuExtra?: Snippet;
@@ -142,7 +148,7 @@
 					{#if avatar}
 						{@render avatar(user)}
 					{:else if user.image}
-						<img alt={t.avatarAlt(displayName)} src={user.image} />
+						<img alt={t.avatarAlt(displayName)} src={user.image} referrerpolicy="no-referrer" />
 					{:else}
 						<span
 							class="flex h-full w-full items-center justify-center bg-neutral text-neutral-content"

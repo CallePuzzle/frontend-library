@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Handle } from '@sveltejs/kit';
 import type { betterAuth } from 'better-auth';
 import { betterAuthHandle } from './hooks.js';
+import { getBetterAuth } from './server.js';
 
 // `svelteKitHandler` es el final de la cadena: en estos tests sólo interesa que delegue la
 // respuesta, así que se sustituye por un passthrough y se espía.
@@ -20,10 +21,17 @@ type HandlerEvent = Parameters<Handle>[0]['event'];
  * Instancia de auth falsa. Devuelve el espía aparte: una vez proyectado el objeto al tipo de
  * better-auth, `vi.fn` pierde sus métodos de espía (`mockClear`, …).
  */
-function fakeAuth(session?: { session: unknown; user: unknown } | null) {
+const SECURE_CONFIG = { baseURL: 'https://app.test', secret: 'x'.repeat(32) };
+
+function fakeAuth(
+	session?: { session: unknown; user: unknown } | null,
+	config: { baseURL?: string; secret: string } = SECURE_CONFIG
+) {
 	const getSession = vi.fn(async () => session);
 	const auth = {
-		api: { getSession }
+		api: { getSession },
+		// Lo único del contexto de better-auth que mira la comprobación de configuración.
+		$context: Promise.resolve({ options: { baseURL: config.baseURL ?? '' }, secret: config.secret })
 	} as unknown as BetterAuthInstance;
 
 	return { auth, getSession };
@@ -74,10 +82,9 @@ describe('betterAuthHandle', () => {
 		for (const pathname of [
 			'/_app/immutable/entry/start.js',
 			'/favicon.ico',
-			'/robots.txt',
 			'/logo.png',
-			'/service-worker.js',
-			'/manifest.webmanifest'
+			'/fonts/inter.woff2',
+			'/service-worker.js'
 		]) {
 			const event = makeEvent(pathname);
 			await handle({ event, resolve });
@@ -93,7 +100,19 @@ describe('betterAuthHandle', () => {
 		const { auth, getSession } = fakeAuth(null);
 		const handle = betterAuthHandle(auth, false, { skipAssets: true });
 
-		for (const pathname of ['/', '/gang/12', '/api/auth/ok']) {
+		// `__data.json` es el `load` de servidor de una navegación en cliente: sin sesión ahí, el
+		// usuario aparece desconectado al navegar. Los `.json`/`.xml`/`.txt` pueden ser rutas
+		// `+server.ts` del consumidor que lean `locals.user`.
+		for (const pathname of [
+			'/',
+			'/gang/12',
+			'/api/auth/ok',
+			'/admin/__data.json',
+			'/__data.json',
+			'/api/export.json',
+			'/sitemap.xml',
+			'/robots.txt'
+		]) {
 			const event = makeEvent(pathname);
 			await handle({ event, resolve: makeResolve() });
 
@@ -110,5 +129,75 @@ describe('betterAuthHandle', () => {
 		await betterAuthHandle(auth, false)({ event, resolve });
 
 		expect(getSession).toHaveBeenCalledOnce();
+	});
+
+	describe('comprobación de configuración', () => {
+		it('falla sin baseURL', async () => {
+			const { auth, getSession } = fakeAuth(null, { secret: SECURE_CONFIG.secret });
+			const handle = betterAuthHandle(auth, false);
+
+			await expect(handle({ event: makeEvent('/'), resolve: makeResolve() })).rejects.toThrow(
+				/baseURL/
+			);
+			expect(getSession).not.toHaveBeenCalled();
+		});
+
+		it('falla con una baseURL que no es http(s)', async () => {
+			const { auth } = fakeAuth(null, {
+				baseURL: 'javascript:alert(1)',
+				secret: SECURE_CONFIG.secret
+			});
+
+			await expect(
+				betterAuthHandle(auth, false)({ event: makeEvent('/'), resolve: makeResolve() })
+			).rejects.toThrow(/baseURL/);
+		});
+
+		it('falla con el secreto por defecto de better-auth', async () => {
+			const { auth } = fakeAuth(null, {
+				baseURL: SECURE_CONFIG.baseURL,
+				secret: 'better-auth-secret-123456789'
+			});
+
+			await expect(
+				betterAuthHandle(auth, false)({ event: makeEvent('/'), resolve: makeResolve() })
+			).rejects.toThrow(/secreto público/);
+		});
+
+		it('falla con un secreto corto', async () => {
+			const { auth } = fakeAuth(null, { baseURL: SECURE_CONFIG.baseURL, secret: 'corto' });
+
+			await expect(
+				betterAuthHandle(auth, false)({ event: makeEvent('/'), resolve: makeResolve() })
+			).rejects.toThrow(/32 caracteres/);
+		});
+
+		it('no comprueba nada durante el build', async () => {
+			const { auth, getSession } = fakeAuth(null, { secret: 'better-auth-secret-123456789' });
+
+			await betterAuthHandle(auth, true)({ event: makeEvent('/'), resolve: makeResolve() });
+
+			expect(getSession).toHaveBeenCalledOnce();
+		});
+	});
+
+	describe('contra una instancia real de better-auth', () => {
+		// Fija que la comprobación lee bien el `$context` de better-auth: si una versión nueva
+		// cambiase su forma, el mock de arriba seguiría pasando y esto no.
+		it('acepta baseURL y secreto propios', async () => {
+			const auth = getBetterAuth({ baseURL: 'https://app.test', secret: SECURE_CONFIG.secret });
+
+			await expect(
+				betterAuthHandle(auth, false)({ event: makeEvent('/'), resolve: makeResolve() })
+			).resolves.toBeInstanceOf(Response);
+		});
+
+		it('rechaza una instancia sin baseURL', async () => {
+			const auth = getBetterAuth({ secret: SECURE_CONFIG.secret });
+
+			await expect(
+				betterAuthHandle(auth, false)({ event: makeEvent('/'), resolve: makeResolve() })
+			).rejects.toThrow(/baseURL/);
+		});
 	});
 });

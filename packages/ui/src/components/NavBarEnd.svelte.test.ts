@@ -55,6 +55,8 @@ describe('NavBarEnd', () => {
 
 		const img = firstOf(getByRole('img', { name: "Ada Lovelace's avatar" }));
 		expect(img?.getAttribute('src')).toBe(withImage.image);
+		// La URL del avatar puede ser de un tercero: no se le filtra la página en la que está.
+		expect(img?.getAttribute('referrerpolicy')).toBe('no-referrer');
 	});
 
 	it('el selector de idioma necesita dos idiomas y setLocale', async () => {

@@ -190,6 +190,7 @@ import { sendOtpEmail } from './sender';
 
 export const auth = getBetterAuth({
 	secret: env.BETTER_AUTH_SECRET,
+	baseURL: env.BETTER_AUTH_URL,
 	database: prismaAdapter(prisma, { provider: 'postgresql' }),
 	plugins: [sveltekitCookies(getRequestEvent), emailOtpPreset(sendOtpEmail)]
 });

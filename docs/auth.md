@@ -46,6 +46,10 @@ export const auth = getBetterAuth({
 });
 ```
 
+`secret` y `baseURL` son obligatorios (o sus variables `BETTER_AUTH_SECRET` y `BETTER_AUTH_URL`,
+que better-auth lee por su cuenta). `betterAuthHandle` lo comprueba en la primera petición y, si
+falta alguno, no atiende ninguna: ver [«La comprobación de configuración»](#la-comprobación-de-configuración).
+
 `getBetterAuth` hace exactamente esto:
 
 ```ts
@@ -113,20 +117,35 @@ llega a producción sin correo.
 
 ### Rate limit del OTP
 
-El rate limit de better-auth no se aplica en desarrollo por defecto, y los dos endpoints del
-flujo OTP son justo los que alguien puede abusar (inundar un buzón, adivinar el código).
-`emailOtpRateLimitRules()` devuelve las reglas que traen puestas el demo y los consumidores
-reales —3 peticiones por minuto por IP— para pedir y para canjear el código:
+Los dos endpoints del flujo OTP son justo los que alguien puede abusar (inundar un buzón,
+adivinar el código). `emailOtpRateLimitRules()` devuelve las reglas que traen puestas el demo y
+los consumidores reales —3 peticiones por minuto por IP— para pedir y para canjear el código:
 
 ```ts
 import { emailOtpRateLimitRules, getBetterAuth, emailOtpPreset } from '@callepuzzle/auth/server';
 
 export const auth = getBetterAuth({
 	// …
-	rateLimit: { customRules: emailOtpRateLimitRules() }
+	rateLimit: { customRules: emailOtpRateLimitRules(), storage: 'database' },
 	// ajusta con `emailOtpRateLimitRules({ window: 120, max: 5 })` si quieres otros números
+	advanced: { ipAddress: { ipAddressHeaders: ['x-real-ip'] } }
 });
 ```
+
+Las reglas solas no bastan. Revisa estas tres cosas:
+
+- **Solo se aplican en producción.** better-auth activa el rate limit con `NODE_ENV=production`, y
+  las `customRules` no lo encienden en desarrollo (para eso, `rateLimit.enabled: true`).
+- **La IP sale de una cabecera.** Por defecto better-auth lee `x-forwarded-for`, que el cliente
+  puede inventarse si ningún proxy la reescribe: cambiándola en cada petición, el límite no frena
+  nada. Fija `advanced.ipAddress.ipAddressHeaders` a la cabecera que pone **tu** proxy
+  (`x-real-ip`, `cf-connecting-ip`, `fly-client-ip`…).
+- **El almacén por defecto es la memoria del proceso.** Con varias instancias o en serverless,
+  cada una cuenta por su lado. Usa `rateLimit.storage: 'database'` (necesita la tabla `rateLimit`
+  en el esquema) o un `secondaryStorage`.
+
+Adivinar el código además está acotado por el `allowedAttempts` del plugin (3 por defecto): tras
+ese número de fallos el OTP se invalida.
 
 Con magic link es igual:
 
@@ -167,14 +186,38 @@ El segundo argumento sale de `$app/environment` y **no es opcional**: durante el
 request real y better-auth necesita saberlo.
 
 El tercero es opcional. Con `{ skipAssets: true }`, el handle no resuelve sesión ni pasa por
-better-auth en peticiones de assets estáticos (`/_app/**`, el service worker y ficheros con
-extensión estática): un asset nunca resuelve sesión ni atiende `/api/auth/*`, así que el salto es
-seguro y se ahorra una llamada a `auth.api.getSession` por fichero servido. Recomendado en
-cualquier app que sirva assets por el mismo origin.
+better-auth en peticiones de assets estáticos (`/_app/**`, el service worker e imágenes o fuentes:
+`ico`, `png`, `jpg`, `gif`, `svg`, `webp`, `avif`, `woff`, `woff2`, `ttf`, `otf`). Un asset nunca
+resuelve sesión ni atiende `/api/auth/*`, así que el salto es seguro y se ahorra una llamada a
+`auth.api.getSession` por fichero servido. Recomendado en cualquier app que sirva assets por el
+mismo origin.
+
+`json`, `txt` y `xml` **no** cuentan como asset, a propósito. SvelteKit pide el `load` de servidor
+de cada navegación en cliente a `/<ruta>/__data.json`, y un `+server.ts` puede llamarse
+`datos.json` o `sitemap.xml`. Hasta `@callepuzzle/auth@0.2.0` esas peticiones se saltaban, y el
+usuario aparecía desconectado en cuanto navegaba sin recargar.
 
 ```ts
 export const handle = sequence(betterAuthHandle(auth, building, { skipAssets: true }));
 ```
+
+### La comprobación de configuración
+
+Fuera del build (`building === false`), antes de atender la primera petición el handle comprueba
+el contexto ya resuelto de better-auth, así que valen tanto las opciones como las variables de
+entorno:
+
+- **`baseURL` es una URL `http(s)`.** Sin ella, better-auth deduce la URL pública de las cabeceras
+  `X-Forwarded-Host` / `X-Forwarded-Proto` de la primera petición a `/api/auth/*`, y la conserva
+  para todo el proceso. Quien envíe esa primera petición decide a qué dominio apuntan los magic
+  links (con el token dentro) de todos los usuarios, y ese dominio pasa a ser un origen de
+  confianza para `callbackURL`.
+- **El secreto no es el de por defecto de better-auth y tiene al menos 32 caracteres.** Con el de
+  por defecto, better-auth firma las cookies con un valor público y en producción solo lo avisa
+  por log. Genera uno con `openssl rand -base64 32`.
+
+Si algo falla, **todas las peticiones** devuelven error con un mensaje que dice qué falta. Es a
+propósito: es preferible a servir una app que parece funcionar.
 
 Si encadenas varios handles, este va antes de los que necesiten leer la sesión (logging con
 usuario, autorización) y después de los de seguridad puros (cabeceras, CSP).
@@ -449,8 +492,9 @@ Para la parte visual de "aquí no puedes estar", `UserNotLogged`:
 
 Las de better-auth, en la app (la librería no lee ninguna):
 
-- `BETTER_AUTH_SECRET` — obligatoria.
-- `BETTER_AUTH_URL` — la URL pública de la app.
+- `BETTER_AUTH_SECRET` — obligatoria, mínimo 32 caracteres (`openssl rand -base64 32`).
+- `BETTER_AUTH_URL` — obligatoria: la URL pública de la app. Ver
+  [«La comprobación de configuración»](#la-comprobación-de-configuración).
 - Las de tu base de datos y las de tu SMTP.
 
 Léelas de `$env/dynamic/private` y no de `process.env`, para que el build no exija tenerlas

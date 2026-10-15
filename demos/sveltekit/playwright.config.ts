@@ -39,7 +39,10 @@ export default defineConfig({
 			DATABASE_URL: process.env.DATABASE_URL ?? 'file:../../../dev.db',
 			// Sin esto el cliente de libSQL se niega a construirse en modo producción.
 			LIBSQL_URL: process.env.LIBSQL_URL ?? 'http://127.0.0.1:8080',
-			BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET ?? 'e2e-secret-not-for-production'
+			// `betterAuthHandle` exige las dos fuera de desarrollo (y `vite preview` no lo es).
+			BETTER_AUTH_SECRET:
+				process.env.BETTER_AUTH_SECRET ?? 'e2e-secret-not-for-production-at-least-32-chars',
+			BETTER_AUTH_URL: process.env.BETTER_AUTH_URL ?? `http://127.0.0.1:${PORT}`
 		}
 	}
 });
