@@ -15,26 +15,26 @@ function describedByTexts(container: HTMLElement, input: HTMLInputElement): stri
 }
 
 describe('FormString', () => {
-	it('marca el campo como obligatorio y lo dice en el aviso', () => {
-		const { container } = render(Harness, { label: 'Apodo', required: true });
+	it('marca el campo como obligatorio y lo dice en el aviso', async () => {
+		const { container } = await render(Harness, { label: 'Apodo', required: true });
 		const input = inputOf(container);
 
 		expect(input.required).toBe(true);
 		expect(describedByTexts(container, input)).toContain('Required');
 	});
 
-	it('avisa de que el campo es opcional cuando no es obligatorio', () => {
-		const { container } = render(Harness, { label: 'Apodo' });
+	it('avisa de que el campo es opcional cuando no es obligatorio', async () => {
+		const { container } = await render(Harness, { label: 'Apodo' });
 		const input = inputOf(container);
 
 		expect(input.required).toBe(false);
 		expect(describedByTexts(container, input)).toContain('Optional');
 	});
 
-	it('enlaza el aviso con aria-describedby sin perder el de formsnap', () => {
+	it('enlaza el aviso con aria-describedby sin perder el de formsnap', async () => {
 		// El componente **añade** su id al que ya pone formsnap para la ayuda y los errores:
 		// si lo sobreescribiera, el usuario de lector de pantalla perdería la descripción.
-		const { container } = render(Harness, {
+		const { container } = await render(Harness, {
 			label: 'Apodo',
 			description: 'Entre 2 y 20 caracteres',
 			required: true
@@ -46,8 +46,8 @@ describe('FormString', () => {
 		expect(describedByTexts(container, input)).toContain('Entre 2 y 20 caracteres');
 	});
 
-	it('type="hidden" oculta el bloque sin sacar el campo del formulario', () => {
-		const { container } = render(Harness, { field: 'token', label: 'Token', type: 'hidden' });
+	it('type="hidden" oculta el bloque sin sacar el campo del formulario', async () => {
+		const { container } = await render(Harness, { field: 'token', label: 'Token', type: 'hidden' });
 		const input = inputOf(container);
 		const fieldset = container.querySelector('fieldset');
 
@@ -57,16 +57,16 @@ describe('FormString', () => {
 		expect(input.getAttribute('name')).toBe('token');
 	});
 
-	it('sin label usa la description como etiqueta, y si no, el nombre del campo', () => {
-		const { container: conDescripcion } = render(Harness, { description: 'Tu apodo' });
+	it('sin label usa la description como etiqueta, y si no, el nombre del campo', async () => {
+		const { container: conDescripcion } = await render(Harness, { description: 'Tu apodo' });
 		expect(conDescripcion.querySelector('label')?.textContent?.trim()).toBe('Tu apodo');
 
-		const { container: pelado } = render(Harness, {});
+		const { container: pelado } = await render(Harness, {});
 		expect(pelado.querySelector('label')?.textContent?.trim()).toBe('nickname');
 	});
 
-	it('usa los textos inyectados por strings', () => {
-		const { container } = render(Harness, {
+	it('usa los textos inyectados por strings', async () => {
+		const { container } = await render(Harness, {
 			label: 'Apodo',
 			required: true,
 			strings: { required: 'Obligatorio', optional: 'Opcional' }
@@ -75,8 +75,8 @@ describe('FormString', () => {
 		expect(describedByTexts(container, inputOf(container))).toContain('Obligatorio');
 	});
 
-	it('la etiqueta apunta al input (nombre accesible)', () => {
-		const { container } = render(Harness, { label: 'Apodo' });
+	it('la etiqueta apunta al input (nombre accesible)', async () => {
+		const { container } = await render(Harness, { label: 'Apodo' });
 		const label = container.querySelector('label');
 
 		expect(label?.getAttribute('for')).toBe(inputOf(container).id);

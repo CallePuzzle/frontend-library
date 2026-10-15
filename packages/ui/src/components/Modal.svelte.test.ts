@@ -17,8 +17,8 @@ function dialogOf(container: HTMLElement): HTMLDialogElement {
 }
 
 describe('Modal', () => {
-	it('abre con showModal() y cierra con close()', () => {
-		const { container, component } = render(Modal, { title: 'Abrir', children: body() });
+	it('abre con showModal() y cierra con close()', async () => {
+		const { container, component } = await render(Modal, { title: 'Abrir', children: body() });
 		const modal = component as unknown as ModalExports;
 		const dialog = dialogOf(container);
 
@@ -32,15 +32,15 @@ describe('Modal', () => {
 	});
 
 	it('abre con el botón por defecto', async () => {
-		const { container, getByRole } = render(Modal, { title: 'Abrir', children: body() });
+		const { container, getByRole } = await render(Modal, { title: 'Abrir', children: body() });
 
 		await getByRole('button', { name: 'Abrir' }).click();
 
 		expect(dialogOf(container).open).toBe(true);
 	});
 
-	it('no pinta el botón por defecto con showButton={false}', () => {
-		const { container } = render(Modal, {
+	it('no pinta el botón por defecto con showButton={false}', async () => {
+		const { container } = await render(Modal, {
 			title: 'Abrir',
 			showButton: false,
 			children: body()
@@ -51,7 +51,7 @@ describe('Modal', () => {
 	});
 
 	it('type="outside" cierra pulsando el backdrop', async () => {
-		const { container, component } = render(Modal, {
+		const { container, component } = await render(Modal, {
 			title: 'Abrir',
 			type: 'outside',
 			children: body()
@@ -68,7 +68,7 @@ describe('Modal', () => {
 	});
 
 	it('type="button" cierra con el botón del pie', async () => {
-		const { container, component } = render(Modal, {
+		const { container, component } = await render(Modal, {
 			title: 'Abrir',
 			type: 'button',
 			children: body()
@@ -83,14 +83,14 @@ describe('Modal', () => {
 		expect(dialogOf(container).open).toBe(false);
 	});
 
-	it('type="X" pinta la cruz con un nombre accesible y sin backdrop', () => {
-		const { container } = render(Modal, { title: 'Abrir', type: 'X', children: body() });
+	it('type="X" pinta la cruz con un nombre accesible y sin backdrop', async () => {
+		const { container } = await render(Modal, { title: 'Abrir', type: 'X', children: body() });
 
 		expect(container.querySelector('form.modal-backdrop')).toBeNull();
 		expect(container.querySelector('.modal-box .sr-only')?.textContent).toBe('Close');
 	});
 
-	it('no explota si se llama a showModal() antes del mount (B5)', () => {
+	it('no explota si se llama a showModal() antes del mount (B5)', async () => {
 		// El `trigger` se renderiza **antes** del `<dialog>`: llamar a `showModal()` desde su
 		// cuerpo reproduce el bug B5, cuando la referencia se buscaba por id en `onMount`.
 		const trigger = createRawSnippet<[{ showModal: () => void }]>((args) => ({
@@ -100,14 +100,14 @@ describe('Modal', () => {
 			}
 		}));
 
-		const { container } = render(Modal, { children: body(), trigger });
+		const { container } = await render(Modal, { children: body(), trigger });
 
 		// Lo importante es que no ha lanzado; y el diálogo sigue cerrado, no a medias.
 		expect(dialogOf(container).open).toBe(false);
 	});
 
-	it('usa los textos inyectados por strings', () => {
-		const { container } = render(Modal, {
+	it('usa los textos inyectados por strings', async () => {
+		const { container } = await render(Modal, {
 			title: 'Abrir',
 			type: 'button',
 			strings: { close: 'Cerrar' },

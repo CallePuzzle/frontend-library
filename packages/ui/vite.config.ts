@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath } from 'node:url';
 import type { UserConfig } from 'vite';
 import type { ViteUserConfig } from 'vitest/config';
+import { playwright } from '@vitest/browser-playwright';
 import { appAliases } from './.storybook/vite-aliases';
 
 const storybookDir = fileURLToPath(new URL('./.storybook', import.meta.url));
@@ -28,8 +29,8 @@ const storybookDir = fileURLToPath(new URL('./.storybook', import.meta.url));
 const browserConfig = () => ({
 	enabled: true,
 	headless: true,
-	provider: 'playwright' as const,
-	instances: [{ browser: 'chromium' }]
+	provider: playwright(),
+	instances: [{ browser: 'chromium' as const }]
 });
 
 const config: UserConfig & { test: ViteUserConfig['test'] } = {

@@ -8,29 +8,29 @@ function links(container: HTMLElement): HTMLAnchorElement[] {
 }
 
 describe('Dock', () => {
-	it('sólo pinta las rutas con showInMobile (filtro estricto)', () => {
+	it('sólo pinta las rutas con showInMobile (filtro estricto)', async () => {
 		const routes: RouteMap = {
 			'/': { label: 'Inicio', showInMobile: true },
 			'/oculta': { label: 'Oculta', showInMenu: true },
 			'/solo-menu': { label: 'Sólo escritorio', showInMenu: true }
 		};
 
-		const { container } = render(Dock, { routes, currentPath: '/' });
+		const { container } = await render(Dock, { routes, currentPath: '/' });
 
 		expect(links(container).map((a) => a.getAttribute('href'))).toEqual(['/']);
 	});
 
-	it('marca la ruta activa con dock-active y aria-current', () => {
+	it('marca la ruta activa con dock-active y aria-current', async () => {
 		const routes: RouteMap = { '/tienda': { label: 'Tienda', showInMobile: true } };
 
-		const { container } = render(Dock, { routes, currentPath: '/tienda' });
+		const { container } = await render(Dock, { routes, currentPath: '/tienda' });
 
 		const active = container.querySelector('a');
 		expect(active?.className).toContain('dock-active');
 		expect(active?.getAttribute('aria-current')).toBe('page');
 	});
 
-	it('reparte la prop ids a los enlaces internos, por clave del mapa', () => {
+	it('reparte la prop ids a los enlaces internos, por clave del mapa', async () => {
 		// Es el anclaje de los tours guiados (T14.1): sin esta prop, un consumidor con tour
 		// tenía que reimplantar el `<nav>` entero para poner `id` a cada `<a>`.
 		const routes = {
@@ -38,7 +38,7 @@ describe('Dock', () => {
 			'/perfil': { label: 'Perfil', showInMobile: true }
 		} satisfies RouteMap;
 
-		const { container } = render(Dock, {
+		const { container } = await render(Dock, {
 			routes,
 			currentPath: '/',
 			ids: { '/perfil': 'tour-perfil' }

@@ -8,7 +8,7 @@ function labels(container: HTMLElement): string[] {
 }
 
 describe('NavBarList', () => {
-	it('sólo pinta las rutas con showInMenu', () => {
+	it('sólo pinta las rutas con showInMenu', async () => {
 		const routes: RouteMap = {
 			'/': { label: 'Inicio', showInMenu: true },
 			'/oculta': { label: 'Oculta' },
@@ -16,15 +16,15 @@ describe('NavBarList', () => {
 			'/ajustes': { label: 'Ajustes', showInMenu: true }
 		};
 
-		const { container } = render(NavBarList, { routes });
+		const { container } = await render(NavBarList, { routes });
 
 		expect(labels(container)).toEqual(['Inicio', 'Ajustes']);
 	});
 
-	it('usa la clave del mapa como href, resuelta con resolve()', () => {
+	it('usa la clave del mapa como href, resuelta con resolve()', async () => {
 		const routes: RouteMap = { '/tienda': { label: 'Tienda', showInMenu: true } };
 
-		const { container } = render(NavBarList, { routes });
+		const { container } = await render(NavBarList, { routes });
 
 		expect(container.querySelector('li a')?.getAttribute('href')).toBe('/tienda');
 	});
@@ -32,7 +32,7 @@ describe('NavBarList', () => {
 	it('reacciona a un cambio de routes en runtime (B15)', async () => {
 		// Es la regresión que hay que blindar: con `getMenuRoutes` en un `const` de módulo, el
 		// menú se quedaba con las etiquetas del primer render (p. ej. al cambiar de idioma).
-		const { container, rerender } = render(NavBarList, {
+		const { container, rerender } = await render(NavBarList, {
 			routes: { '/': { label: 'Home', showInMenu: true } } satisfies RouteMap
 		});
 
@@ -53,10 +53,10 @@ describe('NavBarList', () => {
 		expect(labels(container)).toEqual(['Tienda']);
 	});
 
-	it('compone las clases según el type y respeta la prop class', () => {
+	it('compone las clases según el type y respeta la prop class', async () => {
 		const routes: RouteMap = { '/': { label: 'Inicio', showInMenu: true } };
 
-		const { container } = render(NavBarList, { routes, type: 'drawer', class: 'p-0' });
+		const { container } = await render(NavBarList, { routes, type: 'drawer', class: 'p-0' });
 		const list = container.querySelector('ul');
 
 		expect(list?.className).toContain('menu');
@@ -65,7 +65,7 @@ describe('NavBarList', () => {
 		expect(list?.className).not.toContain('p-4');
 	});
 
-	it('reparte la prop ids a los enlaces internos, por clave del mapa', () => {
+	it('reparte la prop ids a los enlaces internos, por clave del mapa', async () => {
 		// Es el anclaje de los tours guiados (T14.1): sin esta prop, un consumidor con tour
 		// tenía que reimplantar la lista entera para poner `id` a cada `<a>`.
 		const routes = {
@@ -73,7 +73,7 @@ describe('NavBarList', () => {
 			'/tienda': { label: 'Tienda', showInMenu: true }
 		} satisfies RouteMap;
 
-		const { container } = render(NavBarList, {
+		const { container } = await render(NavBarList, {
 			routes,
 			ids: { '/tienda': 'tour-tienda' }
 		});
