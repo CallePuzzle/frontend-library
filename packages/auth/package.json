@@ -1,6 +1,6 @@
 {
 	"name": "@callepuzzle/auth",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Wrapper de better-auth para las apps SvelteKit de CallePuzzle",
 	"license": "MIT",
 	"repository": {
