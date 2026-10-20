@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { emailOTP } from 'better-auth/plugins';
 import type { BetterAuthPlugin } from 'better-auth';
 import {
 	emailOtpPreset,
@@ -17,7 +18,10 @@ describe('getBetterAuth', () => {
 	});
 
 	it('no inyecta ningún plugin propio', () => {
-		const auth = getBetterAuth({ baseURL: 'http://localhost' });
+		// Desde #19 `options` viaja tal cual a `betterAuth` (para conservar la
+		// inferencia), así que la garantía de esta factoría es que no AÑADE ninguno:
+		// lo que el consumidor pasa se queda solo.
+		const auth = getBetterAuth({ baseURL: 'http://localhost', plugins: [] });
 
 		expect(auth.options.plugins).toEqual([]);
 	});
@@ -32,6 +36,22 @@ describe('getBetterAuth', () => {
 			'marker-plugin',
 			'other-plugin'
 		]);
+	});
+
+	it('conserva la inferencia de plugins: sus endpoints existen en el tipo de auth.api (#19)', () => {
+		const send = vi.fn(async () => {});
+		const auth = getBetterAuth({
+			baseURL: 'http://localhost',
+			plugins: [emailOTP({ sendVerificationOTP: send })]
+		});
+
+		// Aserción de tipos, no de runtime: la asignación de abajo solo compila si el
+		// endpoint que añade el plugin (`sendVerificationOTP`) está en el tipo de
+		// `auth.api`. Con la anotación `ReturnType<typeof betterAuth>` anterior, la
+		// inferencia se borraba y aquí `tsc --noEmit` fallaba aunque en runtime el
+		// endpoint existiera.
+		const apiSendVerificationOtp = auth.api.sendVerificationOTP;
+		expect(apiSendVerificationOtp).toBeTypeOf('function');
 	});
 
 	it('propaga el resto de opciones sin tocarlas', () => {

@@ -101,12 +101,20 @@ export function emailOtpRateLimitRules({
  * better-auth deduce la URL pública de las cabeceras `X-Forwarded-*` de la petición, y quien las
  * controle decide a qué dominio apuntan los magic links.
  */
-export function getBetterAuth(options: BetterAuthOptions): ReturnType<typeof betterAuth> {
-	return betterAuth({
-		...options,
-		// El consumidor decide los plugins; la librería no añade ni quita ninguno.
-		plugins: [...(options.plugins ?? [])]
-	});
+export function getBetterAuth<T extends BetterAuthOptions>(
+	options: T
+): ReturnType<typeof betterAuth<T>> {
+	// Genérica y pasando `options` tal cual: `T` llega a `betterAuth` con los plugins
+	// literales del consumidor, así que los endpoints que añaden existen en el TIPO
+	// de `auth.api` y no solo en runtime. La anotación anterior
+	// (`ReturnType<typeof betterAuth>`) borraba esa inferencia (issue #19). El
+	// consumidor decide los plugins; la librería no añade ni quita ninguno.
+	//
+	// La anotación de retorno es necesaria: sin ella, tsc no puede nombrar el tipo
+	// inferido para el `.d.ts` (TS2742/TS7056: referencias a internos de
+	// better-auth). `ReturnType<typeof betterAuth<T>>` sí es portable y conserva la
+	// genericidad, de modo que cada app la instancia con sus plugins concretos.
+	return betterAuth(options);
 }
 
 /**

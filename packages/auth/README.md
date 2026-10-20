@@ -45,7 +45,9 @@ export type AuthClient = typeof authClient;
 ## `@callepuzzle/auth/server`
 
 ```ts
-export function getBetterAuth(options: BetterAuthOptions): ReturnType<typeof betterAuth>;
+export function getBetterAuth<T extends BetterAuthOptions>(
+	options: T
+): ReturnType<typeof betterAuth<T>>;
 export function magicLinkPreset(send: SendMagicLink, options?: MagicLinkPresetOptions);
 export function emailOtpPreset(send: SendVerificationOtp, options?: EmailOtpPresetOptions);
 export type SendMagicLink, SendVerificationOtp, MagicLinkPresetOptions, EmailOtpPresetOptions;
@@ -72,8 +74,9 @@ export const auth = getBetterAuth({
 - **`secret` y `baseURL` son obligatorios** (o `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL`):
   `betterAuthHandle` no atiende peticiones sin ellos. Sin `baseURL`, better-auth deduce la URL de
   los magic links de las cabeceras `X-Forwarded-*`, que controla quien hace la petición.
-- **Cero plugins por defecto** y merge explícito (`plugins: [...(options.plugins ?? [])]`): la
-  librería no añade ni quita ninguno, así que no heredas tablas de esquema que nadie ha pedido.
+- **Cero plugins por defecto** y las opciones viajan tal cual a `betterAuth`: la librería no añade
+  ni quita ninguno, así que no heredas tablas de esquema que nadie ha pedido. Y al no reenvolverlas,
+  los endpoints que añaden tus plugins existen en el **tipo** de `auth.api`, no solo en runtime.
 - Los presets exigen la función de envío como **primer argumento obligatorio**. No compila un
   login que no pueda enviar nada: es imposible desplegar la versión que hace `console.log` del
   token.
