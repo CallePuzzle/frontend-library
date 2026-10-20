@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { emailOTP } from 'better-auth/plugins';
 import type { Handle } from '@sveltejs/kit';
 import type { betterAuth } from 'better-auth';
 import { betterAuthHandle } from './hooks.js';
@@ -51,6 +52,21 @@ function makeResolve() {
 }
 
 describe('betterAuthHandle', () => {
+	it('acepta la instancia específica que devuelve hoy getBetterAuth (#20)', () => {
+		// Aserción de tipos, no de runtime: desde que `getBetterAuth` conserva la
+		// inferencia de plugins (#19) devuelve `Auth<opciones concretas>`, y el
+		// constraint antiguo (`A extends ReturnType<typeof betterAuth>`) la rechazaba
+		// por la invariancia de `Auth<T>`. Si el constraint vuelve a estrecharse,
+		// esta llamada deja de compilar.
+		const auth = getBetterAuth({
+			baseURL: 'https://app.test',
+			secret: 'x'.repeat(32),
+			plugins: [emailOTP({ sendVerificationOTP: async () => {} })]
+		});
+
+		expect(typeof betterAuthHandle(auth, false)).toBe('function');
+	});
+
 	it('resuelve la sesión y la deja en locals', async () => {
 		const { auth, getSession } = fakeAuth({ session: { userId: 'u1' }, user: { id: 'u1' } });
 		const event = makeEvent('/');

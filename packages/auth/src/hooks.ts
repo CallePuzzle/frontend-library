@@ -1,6 +1,24 @@
 import type { Handle } from '@sveltejs/kit';
-import type { betterAuth } from 'better-auth';
+import type { BetterAuthOptions, betterAuth, Session, User } from 'better-auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
+
+/**
+ * Lo mínimo que {@link betterAuthHandle} necesita de la instancia de better-auth.
+ *
+ * Tipo estructural mínimo a propósito — la pauta del propio better-auth, cuyo
+ * `svelteKitHandler` pide `{ handler, options }`— y no el constraint antiguo
+ * (`ReturnType<typeof betterAuth>`): `Auth<T>` es invariante en `T`, así que
+ * desde que `getBetterAuth` conserva la inferencia de plugins (#19) y devuelve
+ * instancias específicas, ese constraint las rechaza.
+ */
+type BetterAuthHandleAuth = {
+	handler: (request: Request) => unknown;
+	options: BetterAuthOptions;
+	$context: Promise<{ options: BetterAuthOptions; secret: string }>;
+	api: {
+		getSession(input: { headers: Headers }): Promise<{ session: Session; user: User } | null>;
+	};
+};
 
 /** Instancia de better-auth tal y como la devuelve `betterAuth()` / `getBetterAuth()`. */
 type BetterAuthInstance = ReturnType<typeof betterAuth>;
@@ -74,7 +92,7 @@ const MIN_SECRET_LENGTH = 32;
  *   el token dentro) de todos los usuarios, y ese dominio pasa a ser un origen de confianza.
  * - **Sin secreto**, better-auth firma con uno público y en producción solo lo avisa por log.
  */
-async function assertSecureAuthConfig(auth: BetterAuthInstance): Promise<void> {
+async function assertSecureAuthConfig(auth: BetterAuthHandleAuth): Promise<void> {
 	const context = await auth.$context;
 	const problems: string[] = [];
 
@@ -138,7 +156,7 @@ function isAssetPathname(pathname: string): boolean {
  * con un error que explica qué falta: es preferible a servir magic links que apuntan a donde
  * diga una cabecera o cookies firmadas con un secreto público.
  */
-export const betterAuthHandle = <A extends BetterAuthInstance>(
+export const betterAuthHandle = <A extends BetterAuthHandleAuth>(
 	auth: A,
 	building: boolean,
 	options: BetterAuthHandleOptions = {}
@@ -163,7 +181,9 @@ export const betterAuthHandle = <A extends BetterAuthInstance>(
 
 		if (session) {
 			// `event.locals` se trata estructuralmente: la librería no declara `App.Locals`.
-			const locals: BetterAuthLocals<A> = event.locals;
+			// El tipo base (no `BetterAuthLocals<A>`): la precisión de la sesión se la pone
+			// cada consumidor en su `app.d.ts`, y `A` ya no garantiza tener `$Infer`.
+			const locals: BetterAuthLocals = event.locals;
 			locals.session = session.session;
 			locals.user = session.user;
 		}
