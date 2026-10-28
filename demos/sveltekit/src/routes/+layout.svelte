@@ -2,7 +2,7 @@
 	import '../app.css';
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
-	import { isLocale, locales, setLocale } from '$lib/paraglide/runtime';
+	import { getLocale, isLocale, locales, setLocale } from '$lib/paraglide/runtime';
 	import { Dock, Drawer, Footer, Header, NavBarEnd, NavBarList } from '@callepuzzle/svelte-ui';
 	import LoginModal from '$lib/components/LoginModal.svelte';
 	import { getRoutes } from '$lib/routes';
@@ -19,6 +19,9 @@
 	// que hace que cambiar de idioma cambie *también* los textos de la librería.
 	const routes = $derived(getRoutes());
 	const t = $derived(getUiStrings());
+	// El idioma activo lo marca `NavBarEnd` en el selector (con `aria-checked`); también en
+	// render, igual que las `routes` de arriba.
+	const activeLocale = $derived(getLocale());
 
 	// El usuario llega del `load` del servidor, uno por petición. `NavBarEnd` lo recibe como
 	// dato plano; no hay ningún store de sesión.
@@ -46,7 +49,14 @@
 					<span class="text-lg font-bold">{m.app_brand()}</span>
 				{/snippet}
 				{#snippet navEnd()}
-					<NavBarEnd {user} {authClient} {locales} setLocale={changeLocale} strings={t.navBarEnd}>
+					<NavBarEnd
+						{user}
+						{authClient}
+						{locales}
+						{activeLocale}
+						setLocale={changeLocale}
+						strings={t.navBarEnd}
+					>
 						{#snippet login()}
 							<!-- Sin usuario, `NavBarEnd` renderiza este snippet: el flujo de login
 							     es una decisión de la app, no de la librería. -->

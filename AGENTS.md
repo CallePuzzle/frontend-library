@@ -118,8 +118,8 @@ packages/ui/src/
 ```
 
 Componentes exportados desde `.`: `Header`, `Drawer`, `NavBarList`, `NavBarEnd`, `Link`,
-`Modal`, `Dock`, `DockLink`, `Footer`, `ButtonSignOut`, `UserNotLogged`, `FormFields`,
-`FormString`, `FormNumber`, `FormCheckbox`, `FormSelect`, `FormTextarea`,
+`DropdownMenu`, `Modal`, `Dock`, `DockLink`, `Footer`, `ButtonSignOut`, `UserNotLogged`,
+`FormFields`, `FormString`, `FormNumber`, `FormCheckbox`, `FormSelect`, `FormTextarea`,
 `FormLoginMagicLink`. Desde `./otp`: `FormLoginOtp`.
 
 ### Fronteras entre paquetes (no las cruces)

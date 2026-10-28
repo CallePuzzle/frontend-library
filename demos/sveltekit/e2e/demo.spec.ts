@@ -34,7 +34,8 @@ test('cambiar de idioma cambia también los textos de la librería', async ({ pa
 	await expect(page.getByRole('link', { name: 'Home' }).first()).toBeVisible();
 
 	await page.getByRole('button', { name: 'Language' }).click();
-	await page.getByRole('button', { name: 'es', exact: true }).click();
+	// `menuitemradio`: el selector es un menú (patrón «menu button» de WAI-ARIA).
+	await page.getByRole('menuitemradio', { name: 'es', exact: true }).click();
 
 	// Ésta es la regresión del bug de i18n: antes la librería compilaba sus propios mensajes y
 	// el idioma que fijaba la app no llegaba a sus textos.

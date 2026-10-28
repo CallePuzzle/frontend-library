@@ -1,3 +1,4 @@
+import { userEvent } from 'vitest/browser';
 import { createRawSnippet } from 'svelte';
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';
@@ -18,8 +19,8 @@ const withImage: SessionUser = {
 const withoutImage: SessionUser = { id: 'usr_2', name: 'Grace Hopper' };
 
 /** Primer elemento que resuelve el locator, sin lanzar si no hay ninguno. */
-function firstOf(locator: { elements(): Element[] }): Element | null {
-	return locator.elements()[0] ?? null;
+function firstOf(locator: { elements(): Element[] }): HTMLElement | null {
+	return (locator.elements()[0] as HTMLElement | undefined) ?? null;
 }
 
 describe('NavBarEnd', () => {
@@ -70,14 +71,63 @@ describe('NavBarEnd', () => {
 			setLocale: (locale: string) => chosen.push(locale)
 		});
 
-		// El dropdown abre por foco (daisyUI usa `:focus-within`): click en el toggle, y el
-		// `aria-expanded` del botón tiene que reflejarlo.
+		// La apertura es estado explícito (click del disparador), no foco: WebKit no da foco
+		// a un `<button>` al pulsarlo, y por foco en un iPhone el menú no abría nunca.
 		const toggle = getByRole('button', { name: 'Language' });
 		await toggle.click();
 		expect(firstOf(toggle)?.getAttribute('aria-expanded')).toBe('true');
 
-		await getByRole('button', { name: 'en', exact: true }).click();
+		// El idioma activo es una entrada de tipo radio del menú.
+		await getByRole('menuitemradio', { name: 'en', exact: true }).click();
 		expect(chosen).toEqual(['en']);
+
+		// Elegir cierra el menú y `aria-expanded` lo refleja.
+		expect(getByRole('menu').elements()).toHaveLength(0);
+		expect(firstOf(toggle)?.getAttribute('aria-expanded')).toBe('false');
+	});
+
+	it('el selector de idioma marca el idioma activo con aria-checked', async () => {
+		const { getByRole } = await render(NavBarEnd, {
+			user: withoutImage,
+			locales: ['es', 'en'],
+			activeLocale: 'es',
+			setLocale: () => {}
+		});
+
+		await getByRole('button', { name: 'Language' }).click();
+
+		expect(
+			firstOf(getByRole('menuitemradio', { name: 'es', exact: true }))?.getAttribute('aria-checked')
+		).toBe('true');
+		expect(
+			firstOf(getByRole('menuitemradio', { name: 'en', exact: true }))?.getAttribute('aria-checked')
+		).toBe('false');
+	});
+
+	it('el menú de usuario abre por teclado, con roles de menú, y Escape lo cierra', async () => {
+		const { getByRole } = await render(NavBarEnd, {
+			user: withoutImage,
+			authClient: { signOut: async () => {} },
+			profileHref: '/settings'
+		});
+
+		const toggle = getByRole('button', { name: 'User menu' });
+		firstOf(toggle)?.focus();
+		await userEvent.keyboard('{ArrowDown}');
+		expect(firstOf(toggle)?.getAttribute('aria-expanded')).toBe('true');
+
+		const items = getByRole('menuitem').elements();
+		expect(items.map((item) => item.textContent?.trim())).toEqual(['Profile', 'Sign out']);
+		// El foco queda en el primer item, no en el disparador.
+		expect(document.activeElement).toBe(items[0]);
+		// Los `<li role="none">` cuelgan del `menu` sin ruido de accesibilidad.
+		const listItems = firstOf(getByRole('menu'))?.querySelectorAll('li');
+		expect(listItems?.length).toBe(2);
+		expect([...(listItems ?? [])].every((li) => li.getAttribute('role') === 'none')).toBe(true);
+
+		await userEvent.keyboard('{Escape}');
+		expect(getByRole('menu').elements()).toHaveLength(0);
+		expect(document.activeElement).toBe(firstOf(toggle));
 	});
 
 	it('la notificación sólo se pinta con usuario y userHasNotification', async () => {
@@ -102,7 +152,9 @@ describe('NavBarEnd', () => {
 			}
 		});
 
-		await getByRole('button', { name: 'Sign out' }).click();
+		// El menú de usuario hay que abrirlo: sin él sus entradas ni están en el DOM.
+		await getByRole('button', { name: 'User menu' }).click();
+		await getByRole('menuitem', { name: 'Sign out' }).click();
 		await expect.poll(() => signOuts.length).toBe(1);
 	});
 });
