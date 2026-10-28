@@ -92,7 +92,8 @@
 				</div>
 			{/snippet}
 			{#snippet menuExtra()}
-				<li><a href="#billing">Facturación</a></li>
+				<!-- El snippet `menuExtra` sigue el marcado del menú: `li role="none"` con `menuitem`. -->
+				<li role="none"><a role="menuitem" href="#billing">Facturación</a></li>
 			{/snippet}
 		</NavBarEnd>
 	{/snippet}

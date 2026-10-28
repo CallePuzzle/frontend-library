@@ -2,6 +2,7 @@ export { default as ButtonSignOut } from './ButtonSignOut.svelte';
 export { default as Dock } from './Dock.svelte';
 export { default as DockLink } from './DockLink.svelte';
 export { default as Drawer } from './Drawer.svelte';
+export { default as DropdownMenu } from './DropdownMenu.svelte';
 export { default as Footer } from './Footer.svelte';
 export { default as FormCheckbox } from './FormCheckbox.svelte';
 export { default as FormFields } from './FormFields.svelte';
