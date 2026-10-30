@@ -1,5 +1,11 @@
 # @callepuzzle/core
 
+## 1.0.1
+
+### Patch Changes
+
+- 273b086: Bump `zod` devDependency to `^4.6.7` (GHSA-mrhx-c7xc-m3w5): unbounded memory accumulation when validating large arrays. No runtime change — the published peer range already allows zod 4.
+
 ## 1.0.0
 
 ### Major Changes

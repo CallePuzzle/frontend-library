@@ -1,6 +1,6 @@
 {
 	"name": "@callepuzzle/core",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Tipos, rutas y utilidades sin UI de la librería de front de CallePuzzle",
 	"license": "MIT",
 	"repository": {
