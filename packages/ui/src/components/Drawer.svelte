@@ -53,7 +53,11 @@
 		{@render children({ drawerId })}
 	</div>
 	<div class={cn('drawer-side', sideClass)}>
-		<label for={drawerId} aria-label={t.closeSidebar} class="drawer-overlay"></label>
+		<!-- `aria-label` está prohibido sobre `<label>` (ARIA in HTML). El overlay es una
+		     superficie de cierre solo para puntero y un `label` nunca es enfocable, así que
+		     sale del árbol de accesibilidad; el cierre por teclado lo da el checkbox, que
+		     anuncia "cerrar" con el cajón abierto. -->
+		<label for={drawerId} aria-hidden="true" class="drawer-overlay"></label>
 		{@render side()}
 	</div>
 </div>

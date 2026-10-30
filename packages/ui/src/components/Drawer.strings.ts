@@ -11,7 +11,7 @@ export type DrawerStrings = {
 	 * tiene nombre propio, dependa o no de un label visible.
 	 */
 	openSidebar: string;
-	/** Etiqueta accesible del toggle y del overlay cuando el cajón está abierto (acción: cerrar). */
+	/** Etiqueta accesible del checkbox con el cajón abierto (acción: cerrar). */
 	closeSidebar: string;
 };
 
