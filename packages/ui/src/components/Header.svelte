@@ -81,7 +81,10 @@
 	<div class="flex items-center lg:hidden">
 		{#if menuToggleFor}
 			<!-- daisyUI abre el drawer con un `<label for>` sobre su checkbox. -->
-			<label for={menuToggleFor} aria-label={t.openSidebar} class="btn btn-square btn-ghost">
+			<label for={menuToggleFor} class="btn btn-square btn-ghost">
+				<!-- `aria-label` está prohibido sobre `<label>` (ARIA in HTML): el nombre accesible
+				     de un label viene de su contenido, así que texto visualmente oculto. -->
+				<span class="sr-only">{t.openSidebar}</span>
 				<Menu />
 			</label>
 		{/if}
