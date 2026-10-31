@@ -17,6 +17,8 @@
 		argTypes: {
 			children: { control: false },
 			side: { control: false },
+			open: { control: 'boolean' },
+			closeOnNavigate: { control: 'boolean' },
 			contentClass: { control: 'text' },
 			sideClass: { control: 'text' }
 		}
