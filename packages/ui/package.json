@@ -1,6 +1,6 @@
 {
 	"name": "@callepuzzle/svelte-ui",
-	"version": "1.2.0",
+	"version": "2.0.0",
 	"description": "Componentes Svelte 5 de la librería de front de CallePuzzle",
 	"license": "MIT",
 	"repository": {
