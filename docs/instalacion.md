@@ -365,6 +365,18 @@ tendrás el botón hamburguesa en móvil:
 </Drawer>
 ```
 
+El cajón se cierra solo al navegar: el layout no se remonta entre páginas y sin esto el
+checkbox de daisyUI llegaría marcado a la página destino. Es el comportamiento por defecto
+(`closeOnNavigate`, `true`); con `closeOnNavigate={false}` el cierre lo gobierna la app, que
+también puede abrirlo o cerrarlo por estado con `bind:open` —p. ej. cerrarlo antes de
+arrancar un tour guiado— en vez de simular clicks sobre el checkbox:
+
+```svelte
+<Drawer bind:open={drawerOpen} closeOnNavigate={false}>
+	<!-- … -->
+</Drawer>
+```
+
 ### Con dock móvil
 
 ```svelte
