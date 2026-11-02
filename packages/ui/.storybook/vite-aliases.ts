@@ -17,7 +17,6 @@ export const appAliases: Record<string, string> = {
 	'$app/paths': mock('app-paths.ts'),
 	'$app/navigation': mock('app-navigation.ts'),
 	'$app/state': mock('app-state.ts'),
-	'$app/environment': mock('app-environment.ts'),
 	// `sveltekit-superforms` importa estos dos (no los componentes de la librería).
 	'$app/stores': mock('app-stores.ts'),
 	'$app/forms': mock('app-forms.ts')

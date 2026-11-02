@@ -23,6 +23,10 @@ demos/sveltekit/test-results
 # Código generado por Paraglide en el demo (lo reescribe `paraglide-js compile`)
 demos/sveltekit/src/lib/paraglide
 
+# Caché interna de inlang/paraglide (la ignora `project.inlang/.gitignore`, que
+# prettier no consulta)
+demos/sveltekit/project.inlang/cache
+
 # Migraciones generadas por Prisma
 demos/sveltekit/prisma/migrations
 

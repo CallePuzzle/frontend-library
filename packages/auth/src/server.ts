@@ -86,7 +86,7 @@ export function emailOtpRateLimitRules({
  * import { prismaAdapter } from 'better-auth/adapters/prisma';
  * import { sveltekitCookies } from 'better-auth/svelte-kit';
  * import { getRequestEvent } from '$app/server';
- * import { env } from '$env/dynamic/private';
+ * import { env } from '$app/env/private';
  *
  * export const auth = getBetterAuth({
  * 	secret: env.BETTER_AUTH_SECRET,

@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { HTMLAnchorAttributes } from 'svelte/elements';
 	import type { Route } from '@callepuzzle/core';
-	import { resolve } from '$app/paths';
+	import { resolveRoute } from '../resolve-route.js';
 	import { cn } from '../utils.js';
 
 	export type Props = {
@@ -25,12 +25,12 @@
 
 	/**
 	 * `resolve()` sólo acepta los ids de ruta del proyecto **donde se compila**. Aquí eso es
-	 * este paquete (una librería sin rutas: su `RouteId` es `'/'`), no la app que lo consume:
-	 * la librería no puede conocer el `RouteId` del consumidor. Por eso `href` es un `string`
-	 * genérico y se estrecha al tipo que espera `resolve` en el punto de llamada. El tipado
-	 * fuerte lo obtiene el consumidor declarando su mapa como `RouteMap<RouteId>`.
+	 * este paquete (una librería sin rutas), no la app que lo consume: la librería no puede
+	 * conocer el `RouteId` del consumidor. Por eso `href` es un `string` genérico y el
+	 * estrechado vive en el envoltorio `resolveRoute`. El tipado fuerte lo obtiene el
+	 * consumidor declarando su mapa como `RouteMap<RouteId>`.
 	 */
-	const resolved = $derived(resolve(href as Parameters<typeof resolve>[0]));
+	const resolved = $derived(resolveRoute(href));
 
 	const Icon = $derived(route?.icon);
 	// Precedencia del contenido: `children` > `route` > `label`.

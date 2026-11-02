@@ -1,3 +1,5 @@
 {
-	"extends": ["./.svelte-kit/tsconfig.json", "@callepuzzle/typescript-config/svelte.json"]
+	"extends": ["$app/tsconfig", "@callepuzzle/typescript-config/svelte.json"],
+	"include": ["src", ".storybook", "*"],
+	"exclude": ["node_modules", "dist", "storybook-static", ".svelte-kit"]
 }

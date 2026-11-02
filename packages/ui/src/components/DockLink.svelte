@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { HTMLAnchorAttributes } from 'svelte/elements';
 	import type { Route } from '@callepuzzle/core';
-	import { resolve } from '$app/paths';
+	import { resolveRoute } from '../resolve-route.js';
 	import Link from './Link.svelte';
 	import { cn } from '../utils.js';
 
@@ -21,9 +21,9 @@
 
 	let { route, currentPath, id, class: className, ...rest }: Props = $props();
 
-	// Mismo estrechado que en `Link`: `resolve()` sólo acepta los ids del proyecto que compila,
-	// que aquí es la librería. El tipado fuerte lo pone el consumidor con `RouteMap<RouteId>`.
-	const href = $derived(resolve(route.id as Parameters<typeof resolve>[0]));
+	// Mismo motivo que en `Link`: el estrechado vive en `resolveRoute`, y el tipado fuerte lo
+	// pone el consumidor con `RouteMap<RouteId>`.
+	const href = $derived(resolveRoute(route.id));
 
 	// Dos formas de decir "activa": por id (`page.route.id`, que no lleva el base path) o por
 	// pathname (que lo lleva: por eso se compara también contra `resolve(route.id)`).

@@ -5,13 +5,13 @@
 		type LoginSchema
 	} from '@callepuzzle/core/schema';
 	import Inbox from '@lucide/svelte/icons/inbox';
-	import { resolve } from '$app/paths';
 	import { PinInput, REGEXP_ONLY_DIGITS, type PinInputRootSnippetProps } from 'bits-ui';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { zod4, zod4Client } from 'sveltekit-superforms/adapters';
 	import { defaults, superForm } from 'sveltekit-superforms/client';
 	import type { EmailOtpClient } from '../types.js';
 	import { cn } from '../utils.js';
+	import { resolveRoute } from '../resolve-route.js';
 	import FormFields from './FormFields.svelte';
 	import { defaultFormLoginOtpStrings, type FormLoginOtpStrings } from './FormLoginOtp.strings.js';
 	import { getUiStrings } from '../strings/context.js';
@@ -70,13 +70,9 @@
 	const contextStrings = getUiStrings();
 	const t = $derived({ ...defaultFormLoginOtpStrings, ...contextStrings.formLoginOtp, ...strings });
 
-	// Mismo estrechado que en `Link`: `resolve()` sólo acepta los ids de ruta del proyecto que
-	// compila, que aquí es la librería. El tipado fuerte lo pone el consumidor con `RouteMap<RouteId>`.
-	const startOver = $derived(
-		startOverHref === undefined
-			? undefined
-			: resolve(startOverHref as Parameters<typeof resolve>[0])
-	);
+	// Mismo motivo que en `Link`: el estrechado vive en `resolveRoute`, y el tipado fuerte lo
+	// pone el consumidor con `RouteMap<RouteId>`.
+	const startOver = $derived(startOverHref === undefined ? undefined : resolveRoute(startOverHref));
 
 	// El schema por defecto se construye **por instancia**, nunca en scope de módulo: así los
 	// textos (que el consumidor puede haber traducido) se resuelven en render.

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { emailOTP } from 'better-auth/plugins';
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
 import type { betterAuth } from 'better-auth';
 import { betterAuthHandle } from './hooks.js';
 import { getBetterAuth } from './server.js';

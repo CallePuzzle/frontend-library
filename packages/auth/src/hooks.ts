@@ -1,4 +1,4 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
 import type { BetterAuthOptions, betterAuth, Session, User } from 'better-auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 
@@ -12,7 +12,7 @@ import { svelteKitHandler } from 'better-auth/svelte-kit';
  * instancias específicas, ese constraint las rechaza.
  */
 type BetterAuthHandleAuth = {
-	handler: (request: Request) => unknown;
+	handler: (request: Request) => Response | Promise<Response>;
 	options: BetterAuthOptions;
 	$context: Promise<{ options: BetterAuthOptions; secret: string }>;
 	api: {
@@ -32,7 +32,7 @@ type BetterAuthInstance = ReturnType<typeof betterAuth>;
  *
  * ```ts
  * // src/app.d.ts
- * import type { auth } from '$lib/server/auth';
+ * import type { auth } from '#lib/server/auth';
  *
  * type Session = typeof auth.$Infer.Session;
  *
@@ -45,7 +45,7 @@ type BetterAuthInstance = ReturnType<typeof betterAuth>;
  * }
  * ```
  *
- * Donde `auth` es la instancia devuelta por `getBetterAuth()` en `$lib/server/auth`.
+ * Donde `auth` es la instancia devuelta por `getBetterAuth()` en `#lib/server/auth`.
  */
 export type BetterAuthLocals<A extends BetterAuthInstance = BetterAuthInstance> = {
 	session?: A['$Infer']['Session']['session'];
@@ -86,10 +86,12 @@ const MIN_SECRET_LENGTH = 32;
  * better-auth, así que cuentan igual las opciones explícitas (`secret`, `baseURL`) que las
  * variables de entorno que lee better-auth (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`).
  *
- * - **Sin `baseURL`**, better-auth la deduce de las cabeceras `X-Forwarded-Host` /
- *   `X-Forwarded-Proto` de la primera petición a `/api/auth/*` y la conserva para todo el
- *   proceso: quien envíe esa primera petición decide a qué dominio apuntan los magic links (con
- *   el token dentro) de todos los usuarios, y ese dominio pasa a ser un origen de confianza.
+ * - **Sin `baseURL`**, better-auth deduce la URL pública del host de la petición (y de las
+ *   cabeceras `X-Forwarded-*` si se activa `advanced.trustedProxyHeaders`): quien envíe esa
+ *   primera petición decide a qué dominio apuntan los magic links (con el token dentro) de
+ *   todos los usuarios, y ese dominio pasa a ser un origen de confianza.
+ * - **`baseURL` dinámico** (`allowedHosts`) es una lista explícita de hosts permitidos:
+ *   configuración válida a propósito, no entra en el chequeo.
  * - **Sin secreto**, better-auth firma con uno público y en producción solo lo avisa por log.
  */
 async function assertSecureAuthConfig(auth: BetterAuthHandleAuth): Promise<void> {
@@ -97,16 +99,22 @@ async function assertSecureAuthConfig(auth: BetterAuthHandleAuth): Promise<void>
 	const problems: string[] = [];
 
 	const baseURL = context.options.baseURL;
-	let protocol: string | undefined;
-	try {
-		protocol = baseURL ? new URL(baseURL).protocol : undefined;
-	} catch {
-		protocol = undefined;
-	}
-	if (protocol !== 'https:' && protocol !== 'http:') {
+	if (typeof baseURL === 'string') {
+		let protocol: string | undefined;
+		try {
+			protocol = new URL(baseURL).protocol;
+		} catch {
+			protocol = undefined;
+		}
+		if (protocol !== 'https:' && protocol !== 'http:') {
+			problems.push(
+				'`baseURL` no es una URL válida: revisa el valor (o la variable `BETTER_AUTH_URL`)'
+			);
+		}
+	} else if (baseURL === undefined) {
 		problems.push(
 			'falta `baseURL` (o `BETTER_AUTH_URL`): sin ella better-auth deduce la URL pública de ' +
-				'las cabeceras X-Forwarded-* de la petición, y los magic links pueden apuntar a otro dominio'
+				'la petición, y los magic links pueden apuntar a otro dominio'
 		);
 	}
 
@@ -136,15 +144,15 @@ function isAssetPathname(pathname: string): boolean {
  * `Handle` de SvelteKit que resuelve la sesión una vez por request, la deja en `event.locals` y
  * delega en el handler de better-auth (que atiende las rutas `/api/auth/*`).
  *
- * `building` viene de `$app/environment`: durante el prerender no hay request real y better-auth
+ * `building` viene de `$app/env`: durante el prerender no hay request real y better-auth
  * necesita saberlo.
  *
  * ```ts
  * // src/hooks.server.ts
  * import { sequence } from '@sveltejs/kit/hooks';
  * import { betterAuthHandle } from '@callepuzzle/auth/hooks';
- * import { auth } from '$lib/server/auth';
- * import { building } from '$app/environment';
+ * import { auth } from '#lib/server/auth';
+ * import { building } from '$app/env';
  *
  * export const handle = sequence(betterAuthHandle(auth, building, { skipAssets: true }));
  * ```

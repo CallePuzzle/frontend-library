@@ -35,7 +35,13 @@ export default ts.config(
 			'no-undef': 'off',
 			// Duplicada por `oxlint` (typescript/no-unused-vars), que ya corre sobre este paquete.
 			'@typescript-eslint/no-unused-vars': 'off',
-			'no-unused-vars': 'off'
+			'no-unused-vars': 'off',
+			// La regla pide `resolve()` (de `$app/paths`) alrededor de cada `goto` y `href`. En este
+			// paquete `resolve` no es directamente llamable —el `RouteId` de una librería sin rutas
+			// es una unión vacía en SvelteKit 3— y la resolución vive en el envoltorio
+			// `resolveRoute()` (ver `src/resolve-route.ts`), que la regla no alcanza a ver: todos
+			// los avisos que produce aquí son falsos positivos.
+			'svelte/no-navigation-without-resolve': 'off'
 		}
 	},
 	{

@@ -2,13 +2,13 @@
 	import '../app.css';
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
-	import { getLocale, isLocale, locales, setLocale } from '$lib/paraglide/runtime';
+	import { getLocale, isLocale, locales, setLocale } from '#lib/paraglide/runtime.js';
 	import { Dock, Drawer, Footer, Header, NavBarEnd, NavBarList } from '@callepuzzle/svelte-ui';
-	import LoginModal from '$lib/components/LoginModal.svelte';
-	import { getRoutes } from '$lib/routes';
-	import { authClient } from '$lib/auth-client';
-	import { m } from '$lib/paraglide/messages.js';
-	import { getUiStrings } from '$lib/ui-strings';
+	import LoginModal from '#lib/components/LoginModal.svelte';
+	import { getRoutes } from '#lib/routes.js';
+	import { authClient } from '#lib/auth-client.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getUiStrings } from '#lib/ui-strings.js';
 	import type { LayoutData } from './$types';
 
 	// `children` se renombra: dentro del `{#snippet children()}` que recibe el `Drawer` el

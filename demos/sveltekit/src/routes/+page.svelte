@@ -4,9 +4,9 @@
 	import { zod4, zod4Client } from 'sveltekit-superforms/adapters';
 	import { defaults, superForm } from 'sveltekit-superforms/client';
 	import { z } from 'zod/v4';
-	import LoginModal from '$lib/components/LoginModal.svelte';
-	import { m } from '$lib/paraglide/messages.js';
-	import { getUiStrings } from '$lib/ui-strings';
+	import LoginModal from '#lib/components/LoginModal.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getUiStrings } from '#lib/ui-strings.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
