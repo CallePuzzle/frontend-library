@@ -67,7 +67,7 @@ const KEY = Symbol.for('callepuzzle:ui-strings');
  * <!-- src/routes/+layout.svelte -->
  * <script lang="ts">
  * 	import { setUiStrings } from '@callepuzzle/svelte-ui';
- * 	import { m } from '$lib/paraglide/messages.js';
+ * 	import { m } from '#lib/paraglide/messages.js';
  *
  * 	// En render, nunca en scope de módulo (regla dura de i18n).
  * 	setUiStrings({

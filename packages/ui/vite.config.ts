@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import type { UserConfig } from 'vite';
 import type { ViteUserConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
-import { appAliases } from './.storybook/vite-aliases';
+import { appAliases } from './.storybook/vite-aliases.ts';
 
 const storybookDir = fileURLToPath(new URL('./.storybook', import.meta.url));
 
@@ -39,8 +39,8 @@ const config: UserConfig & { test: ViteUserConfig['test'] } = {
 	/**
 	 * `sveltekit-superforms` importa `$app/*` desde su `dist`. Esos módulos se resuelven con los
 	 * alias de arriba, pero el **prebundle** de esbuild no aplica `resolve.alias`, así que en modo
-	 * navegador reventaba con `Could not resolve "$app/environment"`. Excluyéndolo del prebundle,
-	 * vite lo resuelve por la ruta normal, donde los alias sí valen.
+	 * navegador reventaba al no poder resolverlos. Excluyéndolo del prebundle, vite lo resuelve
+	 * por la ruta normal, donde los alias sí valen.
 	 */
 	optimizeDeps: {
 		exclude: ['sveltekit-superforms', 'formsnap'],

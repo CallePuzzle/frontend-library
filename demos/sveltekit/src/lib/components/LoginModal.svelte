@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { refreshAll } from '$app/navigation';
 	import { createLoginSchema } from '@callepuzzle/core/schema';
 	import { FormLoginMagicLink, Modal } from '@callepuzzle/svelte-ui';
 	import { FormLoginOtp } from '@callepuzzle/svelte-ui/otp';
-	import { authClient } from '$lib/auth-client';
-	import { m } from '$lib/paraglide/messages.js';
-	import { getUiStrings } from '$lib/ui-strings';
+	import { authClient } from '#lib/auth-client.js';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getUiStrings } from '#lib/ui-strings.js';
 
 	let { buttonClass = 'btn btn-sm btn-primary' }: { buttonClass?: string } = $props();
 
@@ -24,10 +24,10 @@
 
 	/**
 	 * La librería no navega ni invalida datos: solo avisa de que el paso ha ido bien. Recargar
-	 * la sesión (`invalidateAll`) y cerrar el diálogo son decisiones de la app.
+	 * la sesión (`refreshAll`) y cerrar el diálogo son decisiones de la app.
 	 */
 	async function onSuccess() {
-		await invalidateAll();
+		await refreshAll();
 		modal?.close();
 	}
 </script>

@@ -40,9 +40,9 @@ completo está en [`docs/plans/`](docs/plans) y el estado de cada consumidor en
   así funciona igual con `zod@3.25.x` y con `zod@4`).
 - **Auth**: better-auth (peer), con `sveltekit-superforms` para los formularios de login.
 - **OTP**: `bits-ui` (`PinInput`) como peer **opcional**, solo para `@callepuzzle/svelte-ui/otp`.
-- **Storybook 9** con **`@storybook/svelte-vite`** (no `@storybook/sveltekit`), addons `docs`,
+- **Storybook 10** con **`@storybook/svelte-vite`** (no `@storybook/sveltekit`), addons `docs`,
   `a11y` (`test: 'error'`), `vitest` y `svelte-csf`.
-- **Tests**: Vitest 3, tres proyectos en `packages/ui/vite.config.ts` (`unit` en node,
+- **Tests**: Vitest 4, tres proyectos en `packages/ui/vite.config.ts` (`unit` en node,
   `component` y `storybook` en Chromium real vía `vitest-browser-svelte` + Playwright).
 - **Monorepo**: bun workspaces (`packages/*`, `demos/*`) + **turbo**. Versionado y publicación
   con **Changesets** contra GitHub Packages.
@@ -231,8 +231,8 @@ Cada una tiene su ADR en [`docs/adr/`](docs/adr); aquí va el resumen ejecutable
   La navegación de la app es de la app.
 - **Storybook usa `@storybook/svelte-vite`, no `@storybook/sveltekit`.** El paquete es una
   librería y no tiene `src/app.html`; con el framework de SvelteKit, Storybook no arranca. Los
-  módulos `$app/*` que usan los componentes (`$app/paths`, `$app/state`, `$app/navigation`,
-  `$app/environment`) se **mockean con alias de vite** (`.storybook/vite-aliases.ts` +
+  módulos `$app/*` que usan los componentes (`$app/paths`, `$app/state`, `$app/navigation`) se
+  **mockean con alias de vite** (`.storybook/vite-aliases.ts` +
   `.storybook/mocks/`), y `packages/ui/vite.config.ts` usa `svelte()` y no `sveltekit()` porque
   `@storybook/builder-vite` carga ese fichero tal cual.
 - **`kind: 'unsupported'` en vez de disfrazar el campo.** `zodToFieldsJsonSchema` devuelve un

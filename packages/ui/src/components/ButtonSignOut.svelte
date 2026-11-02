@@ -2,7 +2,6 @@
 	import type { Snippet } from 'svelte';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import {
 		defaultButtonSignOutStrings,
 		type ButtonSignOutStrings
@@ -10,6 +9,7 @@
 	import { getUiStrings } from '../strings/context.js';
 	import type { SignOutClient } from '../types.js';
 	import { cn } from '../utils.js';
+	import { resolveRoute } from '../resolve-route.js';
 
 	export type Props = {
 		/** Cliente de auth. Se tipa estructuralmente: la librería no importa `@callepuzzle/auth`. */
@@ -50,7 +50,7 @@
 		await onSignOut?.();
 		if (redirectTo !== null) {
 			// Mismo motivo que en `Link`: la librería no conoce el `RouteId` del consumidor.
-			await goto(resolve(redirectTo as Parameters<typeof resolve>[0]));
+			await goto(resolveRoute(redirectTo));
 		}
 	}
 </script>

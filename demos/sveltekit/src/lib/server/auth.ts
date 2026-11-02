@@ -1,5 +1,5 @@
-import { building, dev } from '$app/environment';
-import { env } from '$env/dynamic/private';
+import { building, dev } from '$app/env';
+import { BETTER_AUTH_SECRET, BETTER_AUTH_URL } from '$app/env/private';
 import {
 	emailOtpPreset,
 	emailOtpRateLimitRules,
@@ -56,9 +56,9 @@ const DEV_SECRET = 'demo-dev-secret-not-for-production-use';
  * Durante el build no se lee el entorno (SvelteKit no lo permite en el prerender) y tampoco hace
  * falta: no hay peticiones.
  */
-function requiredEnv(name: 'BETTER_AUTH_URL' | 'BETTER_AUTH_SECRET', devValue: string) {
+function requiredEnv(value: string | undefined, devValue: string) {
 	if (building) return undefined;
-	return env[name] || (dev ? devValue : undefined);
+	return value || (dev ? devValue : undefined);
 }
 
 /**
@@ -78,8 +78,8 @@ function requiredEnv(name: 'BETTER_AUTH_URL' | 'BETTER_AUTH_SECRET', devValue: s
 export const auth = getBetterAuth({
 	// Sin estos dos, `betterAuthHandle` no atiende ninguna petición: sin `baseURL`, better-auth
 	// deduce la URL de los magic links de las cabeceras X-Forwarded-* de la petición.
-	secret: requiredEnv('BETTER_AUTH_SECRET', DEV_SECRET),
-	baseURL: requiredEnv('BETTER_AUTH_URL', DEV_URL),
+	secret: requiredEnv(BETTER_AUTH_SECRET, DEV_SECRET),
+	baseURL: requiredEnv(BETTER_AUTH_URL, DEV_URL),
 	database: prismaAdapter(db, { provider: 'sqlite' }),
 	// Reglas para los endpoints que mandan credenciales por correo. Ojo: better-auth solo aplica
 	// el rate limit en producción, y estas reglas no lo encienden en desarrollo. En un despliegue

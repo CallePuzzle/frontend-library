@@ -3,7 +3,7 @@
 // `@callepuzzle/auth` **no** declara `App.Locals` por ti (una librería no debe tocar el
 // espacio global del consumidor): lo hace la app, con los tipos reales de su propia
 // instancia de better-auth. Ver el JSDoc de `BetterAuthLocals` en `@callepuzzle/auth/hooks`.
-import type { auth } from '$lib/server/auth';
+import type { auth } from '#lib/server/auth.js';
 
 /** `{ session, user }` inferido por better-auth con los plugins que monta este demo. */
 type Session = typeof auth.$Infer.Session;

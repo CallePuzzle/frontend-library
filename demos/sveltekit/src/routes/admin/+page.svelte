@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Link, UserNotLogged } from '@callepuzzle/svelte-ui';
-	import LoginModal from '$lib/components/LoginModal.svelte';
-	import { m } from '$lib/paraglide/messages.js';
-	import { getLocale } from '$lib/paraglide/runtime.js';
-	import { getUiStrings } from '$lib/ui-strings';
+	import LoginModal from '#lib/components/LoginModal.svelte';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { getUiStrings } from '#lib/ui-strings.js';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
