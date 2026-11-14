@@ -55,7 +55,7 @@
     },
     "packages/auth": {
       "name": "@callepuzzle/auth",
-      "version": "1.0.2",
+      "version": "2.0.0",
       "devDependencies": {
         "@arethetypeswrong/cli": "^0.18.2",
         "@callepuzzle/typescript-config": "*",
@@ -100,7 +100,7 @@
     },
     "packages/ui": {
       "name": "@callepuzzle/svelte-ui",
-      "version": "1.1.2",
+      "version": "2.0.0",
       "dependencies": {
         "@callepuzzle/core": "^1.0.1",
         "clsx": "^2.1.1",

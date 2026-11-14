@@ -1,7 +1,7 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import NavBarList from '../components/NavBarList.svelte';
-	import { routes, routesEs } from './fixtures.js';
+	import { routes, routesEs, routesLong } from './fixtures.js';
 
 	const { Story } = defineMeta({
 		title: 'Navigation/NavBarList',
@@ -37,3 +37,14 @@
 
 <!-- Las etiquetas llegan traducidas desde el mapa: la librería no traduce nada. -->
 <Story name="En castellano" args={{ type: 'horizontal', routes: routesEs }} />
+
+<!--
+	#37: con 9 secciones (el caso de `y-tu-que-compras`) el menú horizontal ya no cabe en
+	portátil (1280–1535px). Por debajo de `2xl` cada entrada enseña sólo el icono — la
+	etiqueta queda como `sr-only`, así que el nombre accesible del enlace sigue siendo la
+	etiqueta — y a partir de `2xl` se ve icono+etiqueta. El cajón no cambia.
+-->
+<Story
+	name="Horizontal largo: icono sólo por debajo de 2xl"
+	args={{ type: 'horizontal', routes: routesLong }}
+/>
