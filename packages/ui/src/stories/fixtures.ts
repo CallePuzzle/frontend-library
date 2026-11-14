@@ -6,10 +6,16 @@
  * store; el mapa de rutas lo declara quien lo usa, y la **clave es la ruta**.
  */
 import type { Route, RouteMap } from '@callepuzzle/core';
+import Archive from '@lucide/svelte/icons/archive';
 import Bell from '@lucide/svelte/icons/bell';
+import ChartColumn from '@lucide/svelte/icons/chart-column';
+import ChefHat from '@lucide/svelte/icons/chef-hat';
+import History from '@lucide/svelte/icons/history';
 import House from '@lucide/svelte/icons/house';
+import List from '@lucide/svelte/icons/list';
 import Settings from '@lucide/svelte/icons/settings';
 import ShoppingCart from '@lucide/svelte/icons/shopping-cart';
+import Users from '@lucide/svelte/icons/users';
 import type { SessionUser } from '../types.js';
 
 /** Mapa de rutas típico: menú de escritorio y dock móvil declaran sus flags por separado. */
@@ -44,6 +50,25 @@ export const routesEs: RouteMap = {
 		showInMobile: true
 	},
 	'/settings': { label: 'Ajustes', icon: Settings, showInMenu: true }
+};
+
+/**
+ * Menú de escritorio grande: el caso del consumidor `y-tu-que-compras` (#37), que llega a
+ * 9 secciones al añadir «Recetas». En portátil (1280–1535px) las etiquetas ya no caben
+ * (`.navbar-center` de daisyUI no encoge y navbar-end tapa las últimas entradas): es el
+ * escenario del disclosure progresivo, icono sólo por debajo de `2xl` e icono+etiqueta a
+ * partir de `2xl`.
+ */
+export const routesLong: RouteMap = {
+	'/': { label: 'Home', icon: House, showInMenu: true },
+	'/shop': { label: 'Shop', icon: ShoppingCart, showInMenu: true },
+	'/recipes': { label: 'Recipes', icon: ChefHat, showInMenu: true },
+	'/lists': { label: 'Lists', icon: List, showInMenu: true },
+	'/pantry': { label: 'Pantry', icon: Archive, showInMenu: true },
+	'/history': { label: 'History', icon: History, showInMenu: true },
+	'/families': { label: 'Families', icon: Users, showInMenu: true },
+	'/reports': { label: 'Reports', icon: ChartColumn, showInMenu: true },
+	'/settings': { label: 'Settings', icon: Settings, showInMenu: true }
 };
 
 /** Una entrada suelta, ya con su `id` reinyectado: es lo que recibe `Link`/`DockLink`. */

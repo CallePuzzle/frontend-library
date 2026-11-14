@@ -4,7 +4,7 @@
 	import Header from '../components/Header.svelte';
 	import NavBarEnd from '../components/NavBarEnd.svelte';
 	import NavBarList from '../components/NavBarList.svelte';
-	import { routes, routesEs, userWithImage } from './fixtures.js';
+	import { routes, routesEs, routesLong, userWithImage } from './fixtures.js';
 
 	/**
 	 * `title` es un **`Snippet`**, no un `string` (H10.3/T7.13): así el consumidor puede poner
@@ -62,12 +62,35 @@
 	{/snippet}
 </Story>
 
-<!-- `navCenter` sustituye al menú derivado de `routes`. -->
+<!--
+	`navCenter` sustituye al menú derivado de `routes`.
+-->
 <Story name="Con menú central propio">
 	{#snippet template(args)}
 		<Header {...args} title={brand}>
 			{#snippet navCenter()}
 				<NavBarList {routes} type="horizontal" class="menu-sm" />
+			{/snippet}
+		</Header>
+	{/snippet}
+</Story>
+
+<!--
+	#37: el escenario del consumidor con 9 secciones, con la zona derecha ocupada. En el
+	viewport de portátil (1280–1535px) el menú sale con icono sólo para que todo quede
+	clicable; a partir de `2xl` se ve icono+etiqueta.
+-->
+<Story name="Con menú largo y NavBarEnd" args={{ routes: routesLong }}>
+	{#snippet template(args)}
+		<Header {...args} title={brand}>
+			{#snippet navEnd()}
+				<NavBarEnd
+					user={userWithImage}
+					authClient={createFakeSignOutClient()}
+					profileHref="/settings"
+					notificationsHref="/notifications"
+					searcher
+				/>
 			{/snippet}
 		</Header>
 	{/snippet}
